@@ -1,8 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Board de atividades</title>
-  <rect width="64" height="64" rx="14" fill="#226020"/>
-  <path d="M0 14 A14 14 0 0 1 14 0 H50 A14 14 0 0 1 64 14 V20 C44 15 20 15 0 20 Z" fill="#276b25"/>
-  <path d="M14 29.5 L4.5 27.5 M14 32.5 L5 33.5 M50 29.5 L59.5 27.5 M50 32.5 L59 33.5" stroke="#e6f0e4" stroke-opacity="0.75" stroke-width="1" stroke-linecap="round"/>
+  <rect width="64" height="64" rx="14" fill="#7cc576" fill-opacity="0.5"/>
+  <path d="M14 29.5 L4.5 27.5 M14 32.5 L5 33.5 M50 29.5 L59.5 27.5 M50 32.5 L59 33.5" stroke="#363b40" stroke-opacity="0.75" stroke-width="1" stroke-linecap="round"/>
   <path d="M14.5 24 C13.2 16 13.8 9.5 16.4 6.6 C19.6 8 23.8 11.6 27 15.4 Z" fill="#363b40"/>
   <path d="M49.5 24 C50.8 16 50.2 9.5 47.6 6.6 C44.4 8 40.2 11.6 37 15.4 Z" fill="#363b40"/>
   <path d="M17.2 18.5 C16.8 14.6 17.2 12 18.2 10.8 C20 12 21.8 13.6 23.2 15.4 Z" fill="#e88aa0"/>

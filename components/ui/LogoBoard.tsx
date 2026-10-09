@@ -5,8 +5,9 @@ type PropriedadesLogoBoard = {
 // Gato escuro (grafite) escrevendo num caderno: o mesmo desenho de
 // app/icon.svg (o ícone da aba), embutido para o cabeçalho não depender de
 // outra requisição.
-// Cores fixas: o logo é igual em qualquer fundo escolhido para o board. Um
-// teste confere que este desenho e o do arquivo continuam iguais.
+// Cores fixas no desenho; só o fundo do ícone é semitransparente e deixa
+// passar a cor do cabeçalho. Um teste confere que este desenho e o do arquivo
+// continuam iguais.
 export default function LogoBoard({ className }: PropriedadesLogoBoard) {
   return (
     <svg
@@ -15,14 +16,10 @@ export default function LogoBoard({ className }: PropriedadesLogoBoard) {
       focusable="false"
       className={className}
     >
-      <rect width="64" height="64" rx="14" fill="#226020" />
-      <path
-        d="M0 14 A14 14 0 0 1 14 0 H50 A14 14 0 0 1 64 14 V20 C44 15 20 15 0 20 Z"
-        fill="#276b25"
-      />
+      <rect width="64" height="64" rx="14" fill="#7cc576" fillOpacity="0.5" />
       <path
         d="M14 29.5 L4.5 27.5 M14 32.5 L5 33.5 M50 29.5 L59.5 27.5 M50 32.5 L59 33.5"
-        stroke="#e6f0e4"
+        stroke="#363b40"
         strokeOpacity="0.75"
         strokeWidth="1"
         strokeLinecap="round"
