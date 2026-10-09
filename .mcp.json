@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "board-atividades": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "node_modules/tsx/dist/cli.mjs",
+        "--tsconfig",
+        "tsconfig.json",
+        "scripts/servidorMcp.ts"
+      ]
+    }
+  }
+}

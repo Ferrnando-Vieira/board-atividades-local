@@ -1,0 +1,1702 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "127b312b-2702-4dfc-b783-fcfd95bedf67",
+  "prevId": "6ae2a3a9-e994-4b64-a7c9-18d26911755c",
+  "tables": {
+    "administrador": {
+      "name": "administrador",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "usuario": {
+          "name": "usuario",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "hash_senha": {
+          "name": "hash_senha",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tentativas_falhas": {
+          "name": "tentativas_falhas",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "bloqueado_ate": {
+          "name": "bloqueado_ate",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "senha_alterada_em": {
+          "name": "senha_alterada_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "administrador_registro_unico": {
+          "name": "administrador_registro_unico",
+          "value": "\"administrador\".\"id\" = 1"
+        },
+        "administrador_usuario_valido": {
+          "name": "administrador_usuario_valido",
+          "value": "length(\"administrador\".\"usuario\") BETWEEN 3 AND 60 AND \"administrador\".\"usuario\" NOT GLOB '*[^a-z0-9._-]*'"
+        },
+        "administrador_hash_senha_formato": {
+          "name": "administrador_hash_senha_formato",
+          "value": "\"administrador\".\"hash_senha\" GLOB 'scrypt$*'"
+        },
+        "administrador_tentativas_nao_negativas": {
+          "name": "administrador_tentativas_nao_negativas",
+          "value": "\"administrador\".\"tentativas_falhas\" >= 0"
+        },
+        "administrador_bloqueado_ate_formato": {
+          "name": "administrador_bloqueado_ate_formato",
+          "value": "\"administrador\".\"bloqueado_ate\" IS NULL OR \"administrador\".\"bloqueado_ate\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        }
+      }
+    },
+    "codigo_configuracao_inicial": {
+      "name": "codigo_configuracao_inicial",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "hash_codigo": {
+          "name": "hash_codigo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expira_em": {
+          "name": "expira_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tentativas_falhas": {
+          "name": "tentativas_falhas",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "codigo_configuracao_registro_unico": {
+          "name": "codigo_configuracao_registro_unico",
+          "value": "\"codigo_configuracao_inicial\".\"id\" = 1"
+        },
+        "codigo_configuracao_hash_formato": {
+          "name": "codigo_configuracao_hash_formato",
+          "value": "length(\"codigo_configuracao_inicial\".\"hash_codigo\") = 64 AND \"codigo_configuracao_inicial\".\"hash_codigo\" NOT GLOB '*[^0-9a-f]*'"
+        },
+        "codigo_configuracao_expira_em_formato": {
+          "name": "codigo_configuracao_expira_em_formato",
+          "value": "\"codigo_configuracao_inicial\".\"expira_em\" IS NULL OR \"codigo_configuracao_inicial\".\"expira_em\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        },
+        "codigo_configuracao_tentativas_nao_negativas": {
+          "name": "codigo_configuracao_tentativas_nao_negativas",
+          "value": "\"codigo_configuracao_inicial\".\"tentativas_falhas\" >= 0"
+        }
+      }
+    },
+    "sessoes_administrativas": {
+      "name": "sessoes_administrativas",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "administrador_id": {
+          "name": "administrador_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "hash_token": {
+          "name": "hash_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expira_em": {
+          "name": "expira_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ultimo_uso_em": {
+          "name": "ultimo_uso_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revogada_em": {
+          "name": "revogada_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "sessoes_administrativas_hash_token_unico": {
+          "name": "sessoes_administrativas_hash_token_unico",
+          "columns": [
+            "hash_token"
+          ],
+          "isUnique": true
+        },
+        "sessoes_administrativas_expira_em": {
+          "name": "sessoes_administrativas_expira_em",
+          "columns": [
+            "expira_em"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "sessoes_administrativas_administrador_id_administrador_id_fk": {
+          "name": "sessoes_administrativas_administrador_id_administrador_id_fk",
+          "tableFrom": "sessoes_administrativas",
+          "tableTo": "administrador",
+          "columnsFrom": [
+            "administrador_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "sessoes_administrativas_hash_formato": {
+          "name": "sessoes_administrativas_hash_formato",
+          "value": "length(\"sessoes_administrativas\".\"hash_token\") = 64 AND \"sessoes_administrativas\".\"hash_token\" NOT GLOB '*[^0-9a-f]*'"
+        },
+        "sessoes_administrativas_expira_em_formato": {
+          "name": "sessoes_administrativas_expira_em_formato",
+          "value": "\"sessoes_administrativas\".\"expira_em\" IS NULL OR \"sessoes_administrativas\".\"expira_em\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        },
+        "sessoes_administrativas_ultimo_uso_em_formato": {
+          "name": "sessoes_administrativas_ultimo_uso_em_formato",
+          "value": "\"sessoes_administrativas\".\"ultimo_uso_em\" IS NULL OR \"sessoes_administrativas\".\"ultimo_uso_em\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        },
+        "sessoes_administrativas_revogada_em_formato": {
+          "name": "sessoes_administrativas_revogada_em_formato",
+          "value": "\"sessoes_administrativas\".\"revogada_em\" IS NULL OR \"sessoes_administrativas\".\"revogada_em\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        }
+      }
+    },
+    "anexos": {
+      "name": "anexos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "atividade_id": {
+          "name": "atividade_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "identificador_arquivo": {
+          "name": "identificador_arquivo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nome_original": {
+          "name": "nome_original",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tipo_conteudo": {
+          "name": "tipo_conteudo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tamanho_bytes": {
+          "name": "tamanho_bytes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "hash_sha256": {
+          "name": "hash_sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "removido_em": {
+          "name": "removido_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "anexos_identificador_arquivo_unico": {
+          "name": "anexos_identificador_arquivo_unico",
+          "columns": [
+            "identificador_arquivo"
+          ],
+          "isUnique": true
+        },
+        "anexos_atividade": {
+          "name": "anexos_atividade",
+          "columns": [
+            "atividade_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "anexos_atividade_id_atividades_id_fk": {
+          "name": "anexos_atividade_id_atividades_id_fk",
+          "tableFrom": "anexos",
+          "tableTo": "atividades",
+          "columnsFrom": [
+            "atividade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "anexos_identificador_formato": {
+          "name": "anexos_identificador_formato",
+          "value": "length(\"anexos\".\"identificador_arquivo\") BETWEEN 16 AND 64 AND \"anexos\".\"identificador_arquivo\" NOT GLOB '*[^0-9a-zA-Z_-]*'"
+        },
+        "anexos_nome_original_valido": {
+          "name": "anexos_nome_original_valido",
+          "value": "length(trim(\"anexos\".\"nome_original\")) > 0 AND length(\"anexos\".\"nome_original\") <= 255"
+        },
+        "anexos_tipo_conteudo_preenchido": {
+          "name": "anexos_tipo_conteudo_preenchido",
+          "value": "length(trim(\"anexos\".\"tipo_conteudo\")) > 0"
+        },
+        "anexos_tamanho_positivo": {
+          "name": "anexos_tamanho_positivo",
+          "value": "\"anexos\".\"tamanho_bytes\" > 0"
+        },
+        "anexos_hash_formato": {
+          "name": "anexos_hash_formato",
+          "value": "length(\"anexos\".\"hash_sha256\") = 64 AND \"anexos\".\"hash_sha256\" NOT GLOB '*[^0-9a-f]*'"
+        },
+        "anexos_removido_em_formato": {
+          "name": "anexos_removido_em_formato",
+          "value": "\"anexos\".\"removido_em\" IS NULL OR \"anexos\".\"removido_em\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        }
+      }
+    },
+    "atividades": {
+      "name": "atividades",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "board_id": {
+          "name": "board_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status_id": {
+          "name": "status_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "solicitante_id": {
+          "name": "solicitante_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "titulo": {
+          "name": "titulo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "descricao": {
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "prioridade": {
+          "name": "prioridade",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 5
+        },
+        "ordem": {
+          "name": "ordem",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "arquivada_em": {
+          "name": "arquivada_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "prazo_data": {
+          "name": "prazo_data",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "prazo_hora": {
+          "name": "prazo_hora",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "concluida_em_data": {
+          "name": "concluida_em_data",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "concluida_em_hora": {
+          "name": "concluida_em_hora",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lembrete_em": {
+          "name": "lembrete_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lembrete_situacao": {
+          "name": "lembrete_situacao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lembrete_disparado_em": {
+          "name": "lembrete_disparado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lembrete_dispensado_em": {
+          "name": "lembrete_dispensado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "versao": {
+          "name": "versao",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "atividades_board_status": {
+          "name": "atividades_board_status",
+          "columns": [
+            "board_id",
+            "status_id"
+          ],
+          "isUnique": false
+        },
+        "atividades_ordem_ativa_unica": {
+          "name": "atividades_ordem_ativa_unica",
+          "columns": [
+            "status_id",
+            "ordem"
+          ],
+          "isUnique": true,
+          "where": "\"atividades\".\"arquivada_em\" IS NULL"
+        },
+        "atividades_lembretes_pendentes": {
+          "name": "atividades_lembretes_pendentes",
+          "columns": [
+            "lembrete_em"
+          ],
+          "isUnique": false,
+          "where": "\"atividades\".\"lembrete_situacao\" = 'pendente'"
+        },
+        "atividades_lembretes_a_dispensar": {
+          "name": "atividades_lembretes_a_dispensar",
+          "columns": [
+            "lembrete_disparado_em"
+          ],
+          "isUnique": false,
+          "where": "\"atividades\".\"lembrete_situacao\" = 'disparado' AND \"atividades\".\"lembrete_dispensado_em\" IS NULL"
+        }
+      },
+      "foreignKeys": {
+        "atividades_board_id_boards_id_fk": {
+          "name": "atividades_board_id_boards_id_fk",
+          "tableFrom": "atividades",
+          "tableTo": "boards",
+          "columnsFrom": [
+            "board_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "atividades_status_id_status_board_id_fk": {
+          "name": "atividades_status_id_status_board_id_fk",
+          "tableFrom": "atividades",
+          "tableTo": "status_board",
+          "columnsFrom": [
+            "status_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "atividades_solicitante_id_solicitantes_id_fk": {
+          "name": "atividades_solicitante_id_solicitantes_id_fk",
+          "tableFrom": "atividades",
+          "tableTo": "solicitantes",
+          "columnsFrom": [
+            "solicitante_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "atividades_titulo_valido": {
+          "name": "atividades_titulo_valido",
+          "value": "length(trim(\"atividades\".\"titulo\")) > 0 AND length(\"atividades\".\"titulo\") <= 300"
+        },
+        "atividades_descricao_tamanho": {
+          "name": "atividades_descricao_tamanho",
+          "value": "\"atividades\".\"descricao\" IS NULL OR length(\"atividades\".\"descricao\") <= 20000"
+        },
+        "atividades_prioridade_intervalo": {
+          "name": "atividades_prioridade_intervalo",
+          "value": "\"atividades\".\"prioridade\" BETWEEN 0 AND 9"
+        },
+        "atividades_ordem_nao_negativa": {
+          "name": "atividades_ordem_nao_negativa",
+          "value": "\"atividades\".\"ordem\" >= 0"
+        },
+        "atividades_arquivada_em_formato": {
+          "name": "atividades_arquivada_em_formato",
+          "value": "\"atividades\".\"arquivada_em\" IS NULL OR \"atividades\".\"arquivada_em\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        },
+        "atividades_prazo_data_formato": {
+          "name": "atividades_prazo_data_formato",
+          "value": "\"atividades\".\"prazo_data\" IS NULL OR (\"atividades\".\"prazo_data\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]' AND date(\"atividades\".\"prazo_data\") = \"atividades\".\"prazo_data\")"
+        },
+        "atividades_prazo_hora_formato": {
+          "name": "atividades_prazo_hora_formato",
+          "value": "\"atividades\".\"prazo_hora\" IS NULL OR (\"atividades\".\"prazo_hora\" GLOB '[0-2][0-9]:[0-5][0-9]' AND \"atividades\".\"prazo_hora\" <= '23:59')"
+        },
+        "atividades_prazo_hora_exige_data": {
+          "name": "atividades_prazo_hora_exige_data",
+          "value": "\"atividades\".\"prazo_hora\" IS NULL OR \"atividades\".\"prazo_data\" IS NOT NULL"
+        },
+        "atividades_conclusao_data_formato": {
+          "name": "atividades_conclusao_data_formato",
+          "value": "\"atividades\".\"concluida_em_data\" IS NULL OR (\"atividades\".\"concluida_em_data\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]' AND date(\"atividades\".\"concluida_em_data\") = \"atividades\".\"concluida_em_data\")"
+        },
+        "atividades_conclusao_hora_formato": {
+          "name": "atividades_conclusao_hora_formato",
+          "value": "\"atividades\".\"concluida_em_hora\" IS NULL OR (\"atividades\".\"concluida_em_hora\" GLOB '[0-2][0-9]:[0-5][0-9]' AND \"atividades\".\"concluida_em_hora\" <= '23:59')"
+        },
+        "atividades_conclusao_hora_exige_data": {
+          "name": "atividades_conclusao_hora_exige_data",
+          "value": "\"atividades\".\"concluida_em_hora\" IS NULL OR \"atividades\".\"concluida_em_data\" IS NOT NULL"
+        },
+        "atividades_lembrete_em_formato": {
+          "name": "atividades_lembrete_em_formato",
+          "value": "\"atividades\".\"lembrete_em\" IS NULL OR \"atividades\".\"lembrete_em\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        },
+        "atividades_lembrete_situacao_valida": {
+          "name": "atividades_lembrete_situacao_valida",
+          "value": "\"atividades\".\"lembrete_situacao\" IS NULL OR \"atividades\".\"lembrete_situacao\" IN ('pendente', 'disparado', 'cancelado')"
+        },
+        "atividades_lembrete_completo": {
+          "name": "atividades_lembrete_completo",
+          "value": "(\"atividades\".\"lembrete_em\" IS NULL) = (\"atividades\".\"lembrete_situacao\" IS NULL)"
+        },
+        "atividades_lembrete_disparo_coerente": {
+          "name": "atividades_lembrete_disparo_coerente",
+          "value": "\"atividades\".\"lembrete_disparado_em\" IS NULL OR \"atividades\".\"lembrete_situacao\" = 'disparado'"
+        },
+        "atividades_lembrete_disparado_em_formato": {
+          "name": "atividades_lembrete_disparado_em_formato",
+          "value": "\"atividades\".\"lembrete_disparado_em\" IS NULL OR \"atividades\".\"lembrete_disparado_em\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        },
+        "atividades_lembrete_dispensado_em_formato": {
+          "name": "atividades_lembrete_dispensado_em_formato",
+          "value": "\"atividades\".\"lembrete_dispensado_em\" IS NULL OR \"atividades\".\"lembrete_dispensado_em\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        },
+        "atividades_lembrete_dispensa_coerente": {
+          "name": "atividades_lembrete_dispensa_coerente",
+          "value": "\"atividades\".\"lembrete_dispensado_em\" IS NULL OR (\"atividades\".\"lembrete_situacao\" = 'disparado' AND \"atividades\".\"lembrete_disparado_em\" IS NOT NULL)"
+        },
+        "atividades_versao_positiva": {
+          "name": "atividades_versao_positiva",
+          "value": "\"atividades\".\"versao\" >= 1"
+        }
+      }
+    },
+    "atividades_tags": {
+      "name": "atividades_tags",
+      "columns": {
+        "atividade_id": {
+          "name": "atividade_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tag_id": {
+          "name": "tag_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "atividades_tags_tag": {
+          "name": "atividades_tags_tag",
+          "columns": [
+            "tag_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "atividades_tags_atividade_id_atividades_id_fk": {
+          "name": "atividades_tags_atividade_id_atividades_id_fk",
+          "tableFrom": "atividades_tags",
+          "tableTo": "atividades",
+          "columnsFrom": [
+            "atividade_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "atividades_tags_tag_id_tags_id_fk": {
+          "name": "atividades_tags_tag_id_tags_id_fk",
+          "tableFrom": "atividades_tags",
+          "tableTo": "tags",
+          "columnsFrom": [
+            "tag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "atividades_tags_atividade_id_tag_id_pk": {
+          "columns": [
+            "atividade_id",
+            "tag_id"
+          ],
+          "name": "atividades_tags_atividade_id_tag_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "boards": {
+      "name": "boards",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "chave": {
+          "name": "chave",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fuso_horario": {
+          "name": "fuso_horario",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fundo": {
+          "name": "fundo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'padrao'"
+        },
+        "versao": {
+          "name": "versao",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "boards_chave_unica": {
+          "name": "boards_chave_unica",
+          "columns": [
+            "chave"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "boards_chave_preenchida": {
+          "name": "boards_chave_preenchida",
+          "value": "length(trim(\"boards\".\"chave\")) > 0"
+        },
+        "boards_nome_valido": {
+          "name": "boards_nome_valido",
+          "value": "length(trim(\"boards\".\"nome\")) > 0 AND length(\"boards\".\"nome\") <= 120"
+        },
+        "boards_fuso_preenchido": {
+          "name": "boards_fuso_preenchido",
+          "value": "length(trim(\"boards\".\"fuso_horario\")) > 0"
+        },
+        "boards_fundo_valido": {
+          "name": "boards_fundo_valido",
+          "value": "\"boards\".\"fundo\" IN ('padrao', 'cor-areia', 'cor-ceu', 'cor-lavanda', 'cor-menta', 'cor-nevoa', 'gradiente-amanhecer', 'gradiente-oceano', 'gradiente-campo', 'gradiente-aurora')"
+        },
+        "boards_versao_positiva": {
+          "name": "boards_versao_positiva",
+          "value": "\"boards\".\"versao\" >= 1"
+        }
+      }
+    },
+    "status_board": {
+      "name": "status_board",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "board_id": {
+          "name": "board_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "chave": {
+          "name": "chave",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "posicao": {
+          "name": "posicao",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "finaliza_atividade": {
+          "name": "finaliza_atividade",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "versao": {
+          "name": "versao",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "status_board_chave_unica": {
+          "name": "status_board_chave_unica",
+          "columns": [
+            "board_id",
+            "chave"
+          ],
+          "isUnique": true
+        },
+        "status_board_nome_unico": {
+          "name": "status_board_nome_unico",
+          "columns": [
+            "board_id",
+            "nome"
+          ],
+          "isUnique": true
+        },
+        "status_board_posicao_unica": {
+          "name": "status_board_posicao_unica",
+          "columns": [
+            "board_id",
+            "posicao"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "status_board_board_id_boards_id_fk": {
+          "name": "status_board_board_id_boards_id_fk",
+          "tableFrom": "status_board",
+          "tableTo": "boards",
+          "columnsFrom": [
+            "board_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "status_board_chave_preenchida": {
+          "name": "status_board_chave_preenchida",
+          "value": "length(trim(\"status_board\".\"chave\")) > 0"
+        },
+        "status_board_nome_valido": {
+          "name": "status_board_nome_valido",
+          "value": "length(trim(\"status_board\".\"nome\")) > 0 AND length(\"status_board\".\"nome\") <= 60"
+        },
+        "status_board_posicao_nao_negativa": {
+          "name": "status_board_posicao_nao_negativa",
+          "value": "\"status_board\".\"posicao\" >= 0"
+        },
+        "status_board_finaliza_booleano": {
+          "name": "status_board_finaliza_booleano",
+          "value": "\"status_board\".\"finaliza_atividade\" IN (0, 1)"
+        },
+        "status_board_versao_positiva": {
+          "name": "status_board_versao_positiva",
+          "value": "\"status_board\".\"versao\" >= 1"
+        }
+      }
+    },
+    "solicitantes": {
+      "name": "solicitantes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "board_id": {
+          "name": "board_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nome_normalizado": {
+          "name": "nome_normalizado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "solicitantes_nome_normalizado_unico": {
+          "name": "solicitantes_nome_normalizado_unico",
+          "columns": [
+            "board_id",
+            "nome_normalizado"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "solicitantes_board_id_boards_id_fk": {
+          "name": "solicitantes_board_id_boards_id_fk",
+          "tableFrom": "solicitantes",
+          "tableTo": "boards",
+          "columnsFrom": [
+            "board_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "solicitantes_nome_valido": {
+          "name": "solicitantes_nome_valido",
+          "value": "length(trim(\"solicitantes\".\"nome\")) > 0 AND length(\"solicitantes\".\"nome\") <= 120"
+        },
+        "solicitantes_nome_normalizado_preenchido": {
+          "name": "solicitantes_nome_normalizado_preenchido",
+          "value": "length(trim(\"solicitantes\".\"nome_normalizado\")) > 0"
+        }
+      }
+    },
+    "tags": {
+      "name": "tags",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "board_id": {
+          "name": "board_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nome_normalizado": {
+          "name": "nome_normalizado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "tags_nome_normalizado_unico": {
+          "name": "tags_nome_normalizado_unico",
+          "columns": [
+            "board_id",
+            "nome_normalizado"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "tags_board_id_boards_id_fk": {
+          "name": "tags_board_id_boards_id_fk",
+          "tableFrom": "tags",
+          "tableTo": "boards",
+          "columnsFrom": [
+            "board_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "tags_nome_valido": {
+          "name": "tags_nome_valido",
+          "value": "length(trim(\"tags\".\"nome\")) > 0 AND length(\"tags\".\"nome\") <= 60"
+        },
+        "tags_nome_normalizado_preenchido": {
+          "name": "tags_nome_normalizado_preenchido",
+          "value": "length(trim(\"tags\".\"nome_normalizado\")) > 0"
+        }
+      }
+    },
+    "escopo_link_solicitantes": {
+      "name": "escopo_link_solicitantes",
+      "columns": {
+        "link_id": {
+          "name": "link_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "solicitante_id": {
+          "name": "solicitante_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "escopo_link_solicitantes_link_id_links_compartilhamento_id_fk": {
+          "name": "escopo_link_solicitantes_link_id_links_compartilhamento_id_fk",
+          "tableFrom": "escopo_link_solicitantes",
+          "tableTo": "links_compartilhamento",
+          "columnsFrom": [
+            "link_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "escopo_link_solicitantes_solicitante_id_solicitantes_id_fk": {
+          "name": "escopo_link_solicitantes_solicitante_id_solicitantes_id_fk",
+          "tableFrom": "escopo_link_solicitantes",
+          "tableTo": "solicitantes",
+          "columnsFrom": [
+            "solicitante_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "escopo_link_solicitantes_link_id_solicitante_id_pk": {
+          "columns": [
+            "link_id",
+            "solicitante_id"
+          ],
+          "name": "escopo_link_solicitantes_link_id_solicitante_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "escopo_link_status": {
+      "name": "escopo_link_status",
+      "columns": {
+        "link_id": {
+          "name": "link_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status_id": {
+          "name": "status_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "escopo_link_status_link_id_links_compartilhamento_id_fk": {
+          "name": "escopo_link_status_link_id_links_compartilhamento_id_fk",
+          "tableFrom": "escopo_link_status",
+          "tableTo": "links_compartilhamento",
+          "columnsFrom": [
+            "link_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "escopo_link_status_status_id_status_board_id_fk": {
+          "name": "escopo_link_status_status_id_status_board_id_fk",
+          "tableFrom": "escopo_link_status",
+          "tableTo": "status_board",
+          "columnsFrom": [
+            "status_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "escopo_link_status_link_id_status_id_pk": {
+          "columns": [
+            "link_id",
+            "status_id"
+          ],
+          "name": "escopo_link_status_link_id_status_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "escopo_link_tags": {
+      "name": "escopo_link_tags",
+      "columns": {
+        "link_id": {
+          "name": "link_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tag_id": {
+          "name": "tag_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "escopo_link_tags_link_id_links_compartilhamento_id_fk": {
+          "name": "escopo_link_tags_link_id_links_compartilhamento_id_fk",
+          "tableFrom": "escopo_link_tags",
+          "tableTo": "links_compartilhamento",
+          "columnsFrom": [
+            "link_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "escopo_link_tags_tag_id_tags_id_fk": {
+          "name": "escopo_link_tags_tag_id_tags_id_fk",
+          "tableFrom": "escopo_link_tags",
+          "tableTo": "tags",
+          "columnsFrom": [
+            "tag_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "escopo_link_tags_link_id_tag_id_pk": {
+          "columns": [
+            "link_id",
+            "tag_id"
+          ],
+          "name": "escopo_link_tags_link_id_tag_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "links_compartilhamento": {
+      "name": "links_compartilhamento",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "board_id": {
+          "name": "board_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "modalidade": {
+          "name": "modalidade",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'restrito'"
+        },
+        "hash_token": {
+          "name": "hash_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "incluir_arquivadas": {
+          "name": "incluir_arquivadas",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "prioridade_minima": {
+          "name": "prioridade_minima",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "prioridade_maxima": {
+          "name": "prioridade_maxima",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "expira_em": {
+          "name": "expira_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revogado_em": {
+          "name": "revogado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ultimo_acesso_em": {
+          "name": "ultimo_acesso_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "versao": {
+          "name": "versao",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "links_compartilhamento_hash_token_unico": {
+          "name": "links_compartilhamento_hash_token_unico",
+          "columns": [
+            "hash_token"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "links_compartilhamento_board_id_boards_id_fk": {
+          "name": "links_compartilhamento_board_id_boards_id_fk",
+          "tableFrom": "links_compartilhamento",
+          "tableTo": "boards",
+          "columnsFrom": [
+            "board_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "links_compartilhamento_nome_valido": {
+          "name": "links_compartilhamento_nome_valido",
+          "value": "length(trim(\"links_compartilhamento\".\"nome\")) > 0 AND length(\"links_compartilhamento\".\"nome\") <= 120"
+        },
+        "links_compartilhamento_modalidade_valida": {
+          "name": "links_compartilhamento_modalidade_valida",
+          "value": "\"links_compartilhamento\".\"modalidade\" IN ('completo', 'restrito')"
+        },
+        "links_compartilhamento_hash_formato": {
+          "name": "links_compartilhamento_hash_formato",
+          "value": "length(\"links_compartilhamento\".\"hash_token\") = 64 AND \"links_compartilhamento\".\"hash_token\" NOT GLOB '*[^0-9a-f]*'"
+        },
+        "links_compartilhamento_incluir_arquivadas_booleano": {
+          "name": "links_compartilhamento_incluir_arquivadas_booleano",
+          "value": "\"links_compartilhamento\".\"incluir_arquivadas\" IN (0, 1)"
+        },
+        "links_compartilhamento_prioridade_minima_intervalo": {
+          "name": "links_compartilhamento_prioridade_minima_intervalo",
+          "value": "\"links_compartilhamento\".\"prioridade_minima\" IS NULL OR (\"links_compartilhamento\".\"prioridade_minima\" BETWEEN 0 AND 9)"
+        },
+        "links_compartilhamento_prioridade_maxima_intervalo": {
+          "name": "links_compartilhamento_prioridade_maxima_intervalo",
+          "value": "\"links_compartilhamento\".\"prioridade_maxima\" IS NULL OR (\"links_compartilhamento\".\"prioridade_maxima\" BETWEEN 0 AND 9)"
+        },
+        "links_compartilhamento_faixa_prioridade_coerente": {
+          "name": "links_compartilhamento_faixa_prioridade_coerente",
+          "value": "\"links_compartilhamento\".\"prioridade_minima\" IS NULL OR \"links_compartilhamento\".\"prioridade_maxima\" IS NULL OR \"links_compartilhamento\".\"prioridade_minima\" <= \"links_compartilhamento\".\"prioridade_maxima\""
+        },
+        "links_compartilhamento_expira_em_formato": {
+          "name": "links_compartilhamento_expira_em_formato",
+          "value": "\"links_compartilhamento\".\"expira_em\" IS NULL OR \"links_compartilhamento\".\"expira_em\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        },
+        "links_compartilhamento_revogado_em_formato": {
+          "name": "links_compartilhamento_revogado_em_formato",
+          "value": "\"links_compartilhamento\".\"revogado_em\" IS NULL OR \"links_compartilhamento\".\"revogado_em\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        },
+        "links_compartilhamento_versao_positiva": {
+          "name": "links_compartilhamento_versao_positiva",
+          "value": "\"links_compartilhamento\".\"versao\" >= 1"
+        }
+      }
+    },
+    "tokens_api": {
+      "name": "tokens_api",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "prefixo": {
+          "name": "prefixo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "hash_token": {
+          "name": "hash_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expira_em": {
+          "name": "expira_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revogado_em": {
+          "name": "revogado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "ultimo_uso_em": {
+          "name": "ultimo_uso_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "criado_em": {
+          "name": "criado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        },
+        "atualizado_em": {
+          "name": "atualizado_em",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))"
+        }
+      },
+      "indexes": {
+        "tokens_api_hash_token_unico": {
+          "name": "tokens_api_hash_token_unico",
+          "columns": [
+            "hash_token"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "tokens_api_nome_valido": {
+          "name": "tokens_api_nome_valido",
+          "value": "length(trim(\"tokens_api\".\"nome\")) > 0 AND length(\"tokens_api\".\"nome\") <= 120"
+        },
+        "tokens_api_prefixo_formato": {
+          "name": "tokens_api_prefixo_formato",
+          "value": "length(\"tokens_api\".\"prefixo\") BETWEEN 4 AND 16"
+        },
+        "tokens_api_hash_formato": {
+          "name": "tokens_api_hash_formato",
+          "value": "length(\"tokens_api\".\"hash_token\") = 64 AND \"tokens_api\".\"hash_token\" NOT GLOB '*[^0-9a-f]*'"
+        },
+        "tokens_api_expira_em_formato": {
+          "name": "tokens_api_expira_em_formato",
+          "value": "\"tokens_api\".\"expira_em\" IS NULL OR \"tokens_api\".\"expira_em\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        },
+        "tokens_api_revogado_em_formato": {
+          "name": "tokens_api_revogado_em_formato",
+          "value": "\"tokens_api\".\"revogado_em\" IS NULL OR \"tokens_api\".\"revogado_em\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]*Z'"
+        }
+      }
+    },
+    "tokens_api_permissoes": {
+      "name": "tokens_api_permissoes",
+      "columns": {
+        "token_id": {
+          "name": "token_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "permissao": {
+          "name": "permissao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "tokens_api_permissoes_token_id_tokens_api_id_fk": {
+          "name": "tokens_api_permissoes_token_id_tokens_api_id_fk",
+          "tableFrom": "tokens_api_permissoes",
+          "tableTo": "tokens_api",
+          "columnsFrom": [
+            "token_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "tokens_api_permissoes_token_id_permissao_pk": {
+          "columns": [
+            "token_id",
+            "permissao"
+          ],
+          "name": "tokens_api_permissoes_token_id_permissao_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "tokens_api_permissoes_catalogo": {
+          "name": "tokens_api_permissoes_catalogo",
+          "value": "\"tokens_api_permissoes\".\"permissao\" IN ('board:ler', 'board:escrever', 'atividades:ler', 'atividades:escrever', 'anexos:ler', 'anexos:escrever')"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

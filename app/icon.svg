@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Board de atividades</title>
+  <rect width="64" height="64" rx="14" fill="#226020"/>
+  <path d="M0 14 A14 14 0 0 1 14 0 H50 A14 14 0 0 1 64 14 V20 C44 15 20 15 0 20 Z" fill="#276b25"/>
+  <path d="M14 29.5 L4.5 27.5 M14 32.5 L5 33.5 M50 29.5 L59.5 27.5 M50 32.5 L59 33.5" stroke="#e6f0e4" stroke-opacity="0.75" stroke-width="1" stroke-linecap="round"/>
+  <path d="M14.5 24 C13.2 16 13.8 9.5 16.4 6.6 C19.6 8 23.8 11.6 27 15.4 Z" fill="#363b40"/>
+  <path d="M49.5 24 C50.8 16 50.2 9.5 47.6 6.6 C44.4 8 40.2 11.6 37 15.4 Z" fill="#363b40"/>
+  <path d="M17.2 18.5 C16.8 14.6 17.2 12 18.2 10.8 C20 12 21.8 13.6 23.2 15.4 Z" fill="#e88aa0"/>
+  <path d="M46.8 18.5 C47.2 14.6 46.8 12 45.8 10.8 C44 12 42.2 13.6 40.8 15.4 Z" fill="#e88aa0"/>
+  <ellipse cx="32" cy="28" rx="18.5" ry="15.5" fill="#363b40"/>
+  <ellipse cx="25" cy="26.5" rx="3.5" ry="4.2" fill="#f5c84c"/>
+  <ellipse cx="39" cy="26.5" rx="3.5" ry="4.2" fill="#f5c84c"/>
+  <ellipse cx="25.9" cy="27.6" rx="1.3" ry="2.9" fill="#0f1112"/>
+  <ellipse cx="39.9" cy="27.6" rx="1.3" ry="2.9" fill="#0f1112"/>
+  <circle cx="24" cy="24.6" r="0.95" fill="#ffffff"/>
+  <circle cx="38" cy="24.6" r="0.95" fill="#ffffff"/>
+  <path d="M30.4 31.6 Q32 30.8 33.6 31.6 L32 33.3 Z" fill="#e88aa0"/>
+  <path d="M32 33.3 V34.4 M32 34.4 Q30.7 35.6 29.5 34.7 M32 34.4 Q33.3 35.6 34.5 34.7" fill="none" stroke="#1d2023" stroke-width="0.8" stroke-linecap="round"/>
+  <rect x="9" y="37" width="46" height="21" rx="3.5" fill="#ffffff" stroke="#184616" stroke-width="2"/>
+  <path d="M16.5 39.5 V56" stroke="#f0a8b4" stroke-width="1"/>
+  <path d="M19.5 43.5 H50 M19.5 47.5 H50" stroke="#b9c9b4" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M19.5 51.8 q1.6 -2.6 3.2 0 t3.2 0 t3.2 0 t3.2 0 t3.2 0 t3.2 0 t3 0" fill="none" stroke="#3a3a3a" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M14 39 V34.5 M20 39 V34.5 M26 39 V34.5 M38 39 V34.5 M44 39 V34.5 M50 39 V34.5" stroke="#e6f0e4" stroke-width="2.4" stroke-linecap="round"/>
+  <ellipse cx="20.5" cy="38.6" rx="5.4" ry="3.7" fill="#363b40"/>
+  <path d="M18.6 40.4 V39 M22.4 40.4 V39" stroke="#4d5359" stroke-width="0.8" stroke-linecap="round"/>
+  <g transform="rotate(35 46 46)">
+    <rect x="43.5" y="31" width="5" height="17" rx="0.8" fill="#f2a33a"/>
+    <rect x="46.8" y="34" width="1.7" height="14" fill="#d98a22"/>
+    <rect x="43.5" y="30" width="5" height="3" rx="1" fill="#e88aa0"/>
+    <rect x="43.5" y="32.6" width="5" height="2.2" fill="#b8c2c8"/>
+    <path d="M43.5 48 L48.5 48 L46 52.5 Z" fill="#f7deb0"/>
+    <path d="M45.2 50.6 L46.8 50.6 L46 52.5 Z" fill="#3a3a3a"/>
+  </g>
+  <path d="M43.5 36 C46 38.5 47.2 40.6 47.6 43" fill="none" stroke="#363b40" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="47.8" cy="44" rx="4.2" ry="3.4" fill="#363b40"/>
+  <path d="M46.3 46.2 V45 M49.3 46.2 V45" stroke="#4d5359" stroke-width="0.8" stroke-linecap="round"/>
+</svg>

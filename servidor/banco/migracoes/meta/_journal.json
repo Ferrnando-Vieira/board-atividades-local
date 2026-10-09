@@ -1,0 +1,76 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1790869458216,
+      "tag": "0000_fundacao",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790886376601,
+      "tag": "0001_compartilhamento_api",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790893974075,
+      "tag": "0002_anexos_fundo_lembretes",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1790952505637,
+      "tag": "0003_fundos_link_padrao",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1790957812760,
+      "tag": "0004_aparencia_lembretes_avulsos",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791228250043,
+      "tag": "0005_animal_links",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1791553678781,
+      "tag": "0006_historico_atividades",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1791565146929,
+      "tag": "0007_solicitante_padrao",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1791569509043,
+      "tag": "0008_tag_solicitante_padrao",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1791570202191,
+      "tag": "0009_aparencia_links",
+      "breakpoints": true
+    }
+  ]
+}

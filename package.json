@@ -1,0 +1,59 @@
+{
+  "name": "board-atividades",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Board local de atividades com persistência em SQLite, administração protegida, API e servidor MCP",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "tsx scripts/servidor.ts desenvolvimento",
+    "build": "next build",
+    "start": "tsx scripts/servidor.ts producao",
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "jest",
+    "prettier": "prettier --write .",
+    "prettier:check": "prettier --check .",
+    "db:gerar-migracao": "drizzle-kit generate",
+    "db:migrar": "tsx scripts/migrar.ts",
+    "inicializar": "tsx scripts/inicializar.ts",
+    "resetar-board": "tsx scripts/resetarBoard.ts",
+    "anexos:limpar": "tsx scripts/limparAnexosOrfaos.ts",
+    "admin:codigo": "tsx scripts/emitirCodigoConfiguracao.ts",
+    "mcp": "tsx scripts/servidorMcp.ts",
+    "backup:criar": "tsx scripts/criarBackup.ts",
+    "backup:verificar": "tsx scripts/verificarBackup.ts",
+    "backup:restaurar": "tsx scripts/restaurarBackup.ts"
+  },
+  "dependencies": {
+    "@next/env": "16.3.8",
+    "better-sqlite3": "13.0.3",
+    "drizzle-orm": "0.45.3",
+    "next": "16.3.8",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-markdown": "10.1.0",
+    "remark-breaks": "4.0.0",
+    "remark-gfm": "4.0.1",
+    "server-only": "0.0.1",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/better-sqlite3": "9.6.0",
+    "@types/jest": "30.0.0",
+    "@types/node": "22.20.4",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "drizzle-kit": "0.31.11",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.8",
+    "eslint-config-prettier": "10.1.8",
+    "jest": "30.5.2",
+    "prettier": "3.9.9",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  }
+}

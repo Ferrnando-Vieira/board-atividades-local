@@ -1,0 +1,49 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.npm-cache
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+/.swc/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+
+# env files
+.env*
+!.env.example
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# dados locais: banco SQLite, anexos privados, backups e a chave do link
+# padrão nunca vão para o repositório
+/dados/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite-journal
+*.db
+chave-link-padrao
+manifesto-backup.json
+
+# configurações pessoais de ferramentas (permissões locais do Claude Code)
+.claude/settings.local.json
+.claude/*.local.*
+
+.idea/
+.vscode/

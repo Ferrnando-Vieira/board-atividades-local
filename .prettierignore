@@ -1,0 +1,6 @@
+node_modules
+.next
+coverage
+dados
+servidor/banco/migracoes/meta
+package-lock.json
