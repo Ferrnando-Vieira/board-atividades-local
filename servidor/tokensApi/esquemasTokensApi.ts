@@ -25,8 +25,6 @@ const esquemaNomeToken = z.preprocess(
     .max(LIMITES_TEXTO.NOME_TOKEN_API, { error: mensagens.nomeLongo }),
 );
 
-// Só as permissões oferecidas na tela; anexos:* continuam no catálogo do
-// banco, reservadas para quando a API de anexos existir.
 export const esquemaNovoTokenApi = z.object({
   nome: esquemaNomeToken,
   permissoes: z.preprocess(

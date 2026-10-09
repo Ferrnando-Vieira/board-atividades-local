@@ -17,7 +17,6 @@ export const EVENTOS = {
   NOME_ALTERACAO: 'alteracao',
   // Comentário periódico: mantém a conexão viva em proxies e no navegador.
   INTERVALO_BATIMENTO_MS: 25_000,
-  // Espera do navegador antes de reconectar.
   ESPERA_RECONEXAO_MS: 5_000,
   // A conexão é encerrada de tempos em tempos; o navegador reconecta e o
   // acesso (sessão ou link) é conferido de novo pela rota.

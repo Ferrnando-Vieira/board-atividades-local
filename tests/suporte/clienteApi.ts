@@ -1,3 +1,9 @@
+import * as rotaAnexo from '@/app/api/v1/atividades/[id]/anexos/[anexoId]/route';
+import * as rotaAnexos from '@/app/api/v1/atividades/[id]/anexos/route';
+import * as rotaHistorico from '@/app/api/v1/atividades/[id]/historico/route';
+import * as rotaDesativarLembreteAtividade from '@/app/api/v1/atividades/[id]/lembrete/desativar/route';
+import * as rotaReativarLembreteAtividade from '@/app/api/v1/atividades/[id]/lembrete/reativar/route';
+import * as rotaLembreteAtividade from '@/app/api/v1/atividades/[id]/lembrete/route';
 import * as rotaAtividade from '@/app/api/v1/atividades/[id]/route';
 import * as rotaArquivar from '@/app/api/v1/atividades/[id]/arquivar/route';
 import * as rotaDesarquivar from '@/app/api/v1/atividades/[id]/desarquivar/route';
@@ -9,6 +15,7 @@ import * as rotaReativarLembrete from '@/app/api/v1/lembretes/[id]/reativar/rout
 import * as rotaUmLembrete from '@/app/api/v1/lembretes/[id]/route';
 import * as rotaLembretes from '@/app/api/v1/lembretes/route';
 import * as rotaIndice from '@/app/api/v1/route';
+import * as rotaSolicitantePadrao from '@/app/api/v1/solicitantes/padrao/route';
 import * as rotaSolicitantes from '@/app/api/v1/solicitantes/route';
 import * as rotaMoverStatus from '@/app/api/v1/status/[id]/mover/route';
 import * as rotaUmStatus from '@/app/api/v1/status/[id]/route';
@@ -31,6 +38,12 @@ export const MODULOS_ROTA_API: Record<string, ModuloRotaApi> = {
   '/api/v1/atividades/{id}/mover': rotaMoverAtividade,
   '/api/v1/atividades/{id}/arquivar': rotaArquivar,
   '/api/v1/atividades/{id}/desarquivar': rotaDesarquivar,
+  '/api/v1/atividades/{id}/historico': rotaHistorico,
+  '/api/v1/atividades/{id}/anexos': rotaAnexos,
+  '/api/v1/atividades/{id}/anexos/{anexoId}': rotaAnexo,
+  '/api/v1/atividades/{id}/lembrete': rotaLembreteAtividade,
+  '/api/v1/atividades/{id}/lembrete/desativar': rotaDesativarLembreteAtividade,
+  '/api/v1/atividades/{id}/lembrete/reativar': rotaReativarLembreteAtividade,
   '/api/v1/lembretes': rotaLembretes,
   '/api/v1/lembretes/{id}': rotaUmLembrete,
   '/api/v1/lembretes/{id}/desativar': rotaDesativarLembrete,
@@ -41,6 +54,7 @@ export const MODULOS_ROTA_API: Record<string, ModuloRotaApi> = {
   '/api/v1/tags': rotaTags,
   '/api/v1/tags/{id}': rotaUmaTag,
   '/api/v1/solicitantes': rotaSolicitantes,
+  '/api/v1/solicitantes/padrao': rotaSolicitantePadrao,
 };
 
 export const MODULO_ROTA_INEXISTENTE: ModuloRotaApi = rotaInexistente;
@@ -52,6 +66,7 @@ export type OpcoesChamadaApi = {
   cabecalhoAutorizacao?: string;
   corpo?: unknown;
   corpoBruto?: string;
+  formulario?: FormData;
   tipoConteudo?: string;
   consulta?: string;
   parametros?: Record<string, string | string[]>;
@@ -60,6 +75,7 @@ export type OpcoesChamadaApi = {
 export type RespostaTesteApi = {
   status: number;
   cabecalhos: Headers;
+  bytes: Uint8Array;
   corpo: {
     dados?: unknown;
     erro?: {
@@ -91,6 +107,7 @@ export async function chamarApi(
   opcoes: OpcoesChamadaApi = {},
 ): Promise<RespostaTesteApi> {
   const corpo =
+    opcoes.formulario ??
     opcoes.corpoBruto ??
     (opcoes.corpo === undefined ? undefined : JSON.stringify(opcoes.corpo));
   const requisicao = new Request(
@@ -100,10 +117,15 @@ export async function chamarApi(
   const resposta = await modulo[metodo](requisicao, {
     params: Promise.resolve(opcoes.parametros ?? {}),
   });
-  const texto = await resposta.text();
+  const bytes = new Uint8Array(await resposta.arrayBuffer());
+  const json = resposta.headers
+    .get('content-type')
+    ?.startsWith('application/json');
+  const texto = json ? new TextDecoder().decode(bytes) : '';
   return {
     status: resposta.status,
     cabecalhos: resposta.headers,
+    bytes,
     corpo: texto ? (JSON.parse(texto) as RespostaTesteApi['corpo']) : {},
   };
 }

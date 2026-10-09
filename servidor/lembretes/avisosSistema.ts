@@ -11,7 +11,6 @@ const ANCORA_LEMBRETE = '#lembrete-';
 export type AvisoSistema = {
   titulo: string;
   corpo: string;
-  // Endereço aberto ao clicar na notificação.
   url: string;
 };
 

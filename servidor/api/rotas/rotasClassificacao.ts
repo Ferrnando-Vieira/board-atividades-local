@@ -33,7 +33,10 @@ import {
   esquemaExclusaoTag,
   esquemaNovaTag,
 } from '@/servidor/classificacao/esquemasTags';
-import { registrarSolicitante } from '@/servidor/classificacao/solicitantesServico';
+import {
+  alterarSolicitantePadrao,
+  registrarSolicitante,
+} from '@/servidor/classificacao/solicitantesServico';
 import {
   criarTag,
   editarTag,
@@ -146,5 +149,22 @@ export const rotaRegistrarSolicitante = criarRotaDoEndpoint(
     return respostaApi(esquemaSolicitanteRegistradoApi, registro, {
       status: registro.criado ? STATUS_CRIADO : STATUS_EXISTENTE,
     });
+  },
+);
+
+export const rotaDefinirSolicitantePadrao = criarRotaDoEndpoint(
+  ENDPOINTS_API.definirSolicitantePadrao,
+  async ({ banco, requisicao }) => {
+    const entrada = validarEntradaApi(
+      esquemaNomeApi,
+      await lerCorpoJson(requisicao),
+    );
+    return respostaApi(
+      esquemaSolicitanteRegistradoApi,
+      alterarSolicitantePadrao(
+        banco,
+        validarEntradaApi(esquemaNovoSolicitante, entrada),
+      ),
+    );
   },
 );

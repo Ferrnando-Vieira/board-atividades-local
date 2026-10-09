@@ -164,8 +164,8 @@ export function criarAtividade(
   );
 }
 
-// O lembrete não faz parte do formulário nesta etapa e é preservado como
-// está. A data de criação nunca é alterada: ela define a posição no quadro.
+// O lembrete não faz parte do formulário e é preservado como está. A data de
+// criação nunca é alterada: ela define a posição no quadro.
 export function editarAtividade(
   banco: BancoDados,
   dados: DadosEdicaoAtividade,

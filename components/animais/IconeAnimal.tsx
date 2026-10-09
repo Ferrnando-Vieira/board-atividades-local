@@ -2,8 +2,6 @@ import { useId, type ReactNode } from 'react';
 import type { ChaveAnimal } from '@/config/animais';
 import { combinarClasses } from '@/util/ClassesUtils';
 
-// Ilustrações próprias (formas simples, estilo flat) na grade 48×48, com
-// fundo claro e recorte circular para usar como avatar.
 type DesenhoAnimal = {
   fundo: string;
   formas: ReactNode;

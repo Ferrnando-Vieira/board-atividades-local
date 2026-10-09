@@ -120,7 +120,6 @@ function exibir(visitanteId: string, visitante: Visitante): PresencaExibida {
   return {
     id: gerarIdOpaco(visitanteId),
     tipo: visitante.tipo,
-    // O proprietário aparece como proprietário, não como animal anônimo.
     animal: visitante.tipo === 'proprietario' ? null : visitante.animal,
     nome: visitante.tipo === 'proprietario' ? null : visitante.nome,
   };

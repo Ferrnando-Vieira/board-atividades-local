@@ -53,6 +53,6 @@ Data: 09/10/2026. Escopo: formatação da descrição da atividade (inclusive tr
 
 ## 6. Limitações
 
-- A API e o MCP leem e gravam a descrição em Markdown, mas não enviam imagens (não há endpoints de anexos) nem leem o histórico.
+- A API e o MCP leem e gravam a descrição em Markdown. O envio de imagens e a leitura do histórico chegaram depois (`docs/api-agentes.md`).
 - O histórico não tem filtro nem exportação, e não registra as operações em lote de status e tags.
 - A conferência do Markdown é só de exibição: o texto gravado continua sendo o que foi digitado.

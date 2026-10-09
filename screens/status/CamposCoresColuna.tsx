@@ -26,8 +26,6 @@ type PropriedadesCamposCoresColuna = {
   erros?: Partial<Record<string, string[]>>;
 };
 
-// Cores próprias da coluna, com prévia do título e do corpo sobre o fundo do
-// board (mesmo cálculo de contraste do quadro).
 export default function CamposCoresColuna({
   nomeColuna,
   corTitulo,

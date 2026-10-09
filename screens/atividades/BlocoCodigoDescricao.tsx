@@ -8,9 +8,8 @@ type PropriedadesBlocoCodigoDescricao = {
   children: ReactNode;
 };
 
-// Bloco de código da descrição com botão de copiar. Como no
-// BlocoCodigoCopiavel: sem contexto seguro (http://IP da rede local) não há
-// área de transferência, então o código fica selecionado para o Ctrl+C.
+// Como no BlocoCodigoCopiavel: sem contexto seguro (http://IP da rede local)
+// não há área de transferência, então o código fica selecionado para o Ctrl+C.
 export default function BlocoCodigoDescricao({
   children,
 }: PropriedadesBlocoCodigoDescricao) {

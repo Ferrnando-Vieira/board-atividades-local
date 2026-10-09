@@ -7,6 +7,7 @@ export const CODIGOS_ERRO_API = {
   DADOS_INVALIDOS: 'dados-invalidos',
   JSON_INVALIDO: 'json-invalido',
   TIPO_CONTEUDO: 'tipo-conteudo-nao-suportado',
+  MULTIPART_INVALIDO: 'multipart-invalido',
   CORPO_GRANDE: 'corpo-grande-demais',
   PARAMETRO_DESCONHECIDO: 'parametro-desconhecido',
   ROTA_INEXISTENTE: 'rota-inexistente',
@@ -26,6 +27,12 @@ export const mensagensApi = {
   dadosInvalidos: 'Os dados enviados são inválidos. Veja os campos indicados.',
   jsonInvalido: 'O corpo da requisição precisa ser um objeto JSON válido.',
   tipoConteudo: 'Envie o corpo com "Content-Type: application/json".',
+  tipoConteudoArquivos:
+    'Envie os arquivos com "Content-Type: multipart/form-data", um campo "arquivo" para cada um.',
+  multipartInvalido:
+    'O corpo multipart/form-data está malformado. Envie cada arquivo no campo "arquivo".',
+  campoDesconhecido: (nomes: readonly string[]) =>
+    `Campo desconhecido no envio: ${nomes.join(', ')}. Use apenas "arquivo".`,
   corpoGrande: `O corpo da requisição passa do limite de ${LIMITES_CORPO_API.BYTES_MAXIMOS / 1024} KiB.`,
   parametroDesconhecido: (nomes: readonly string[]) =>
     `Parâmetro de consulta desconhecido: ${nomes.join(', ')}.`,

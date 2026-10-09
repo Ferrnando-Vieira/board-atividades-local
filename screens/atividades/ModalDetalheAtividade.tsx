@@ -14,7 +14,6 @@ type PropriedadesModalDetalheAtividade = {
   aviso: Aviso | null;
 };
 
-// Mesmo conteúdo da página de detalhe, dentro de um diálogo sobre o quadro.
 export default function ModalDetalheAtividade({
   acesso,
   atividadeId,

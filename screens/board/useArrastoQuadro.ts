@@ -92,7 +92,6 @@ type SessaoPonteiro = {
   item: ArrastoCartao | ArrastoColuna;
 };
 
-// O que os ouvintes de ponteiro usam do evento (nativo, vindo da janela).
 type EventoPonteiro = Pick<
   globalThis.PointerEvent,
   'pointerId' | 'pointerType' | 'clientX' | 'clientY' | 'buttons' | 'timeStamp'

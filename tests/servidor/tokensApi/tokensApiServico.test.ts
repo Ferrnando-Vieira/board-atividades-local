@@ -166,14 +166,24 @@ describe('tokens de API', () => {
       expect(resultado.success).toBe(false);
     });
 
-    it('deve recusar permissão fora das oferecidas, inclusive anexos', () => {
+    it('deve recusar permissão fora das oferecidas', () => {
       const resultado = esquemaNovoTokenApi.safeParse({
         nome: 'Kiro',
-        permissoes: ['anexos:ler'],
+        permissoes: ['admin:tudo'],
         validadeDias: '',
       });
 
       expect(resultado.success).toBe(false);
+    });
+
+    it('deve aceitar as permissões de anexos', () => {
+      const resultado = esquemaNovoTokenApi.safeParse({
+        nome: 'Kiro',
+        permissoes: ['anexos:ler', 'anexos:escrever'],
+        validadeDias: '',
+      });
+
+      expect(resultado.success).toBe(true);
     });
 
     it('deve remover permissões repetidas', () => {

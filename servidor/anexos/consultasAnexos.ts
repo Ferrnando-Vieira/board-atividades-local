@@ -40,6 +40,29 @@ export function listarAnexosDaAtividade(
     .all();
 }
 
+export function retornarAnexoDaAtividade(
+  executor: ExecutorBanco,
+  atividadeId: number,
+  anexoId: number,
+): AnexoParaDownload | null {
+  return (
+    executor
+      .select({
+        ...COLUNAS_RESUMO_ANEXO,
+        identificadorArquivo: anexos.identificadorArquivo,
+      })
+      .from(anexos)
+      .where(
+        and(
+          eq(anexos.id, anexoId),
+          eq(anexos.atividadeId, atividadeId),
+          isNull(anexos.removidoEm),
+        ),
+      )
+      .get() ?? null
+  );
+}
+
 // O anexo só é devolvido se a atividade dele passar pela mesma restrição de
 // leitura do board, da busca e do detalhe: um identificador digitado na URL
 // não alcança anexo de atividade fora do escopo.

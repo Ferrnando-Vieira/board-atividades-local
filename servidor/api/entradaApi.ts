@@ -5,6 +5,7 @@ import { ErroValidacaoApi } from '@/servidor/api/respostasApi';
 import { ErroApp, STATUS_ERRO } from '@/util/ErroApp';
 
 const TIPO_CONTEUDO_JSON = /^application\/json\s*(;|$)/i;
+const TIPO_CONTEUDO_MULTIPART = /^multipart\/form-data\s*;/i;
 const MAPA_ERROS_PT_BR = z.locales.ptBR().localeError;
 
 // Mensagens próprias dos esquemas do domínio prevalecem; o mapa pt-BR só
@@ -34,17 +35,51 @@ function erroJsonInvalido(): ErroApp {
   });
 }
 
+function erroMultipartInvalido(): ErroApp {
+  return new ErroApp(mensagensApi.multipartInvalido, {
+    status: STATUS_ERRO.REQUISICAO_INVALIDA,
+    codigo: CODIGOS_ERRO_API.MULTIPART_INVALIDO,
+  });
+}
+
+function exigirTipoConteudo(
+  requisicao: Request,
+  formato: RegExp,
+  mensagem: string,
+): string {
+  const tipoConteudo = requisicao.headers.get('content-type')?.trim() ?? '';
+  if (!formato.test(tipoConteudo)) {
+    throw new ErroApp(mensagem, {
+      status: STATUS_ERRO.TIPO_NAO_SUPORTADO,
+      codigo: CODIGOS_ERRO_API.TIPO_CONTEUDO,
+    });
+  }
+  return tipoConteudo;
+}
+
+// O Fetch entrega os pedaços do corpo sobre ArrayBuffer; a cópia só acontece
+// se algum vier sobre SharedArrayBuffer, que o Blob não aceita.
+function ehVisaoDeArrayBuffer(
+  pedaco: Uint8Array,
+): pedaco is Uint8Array<ArrayBuffer> {
+  return pedaco.buffer instanceof ArrayBuffer;
+}
+
 // Lê aos poucos e para no limite: um Content-Length ausente ou falso não
 // faz o servidor carregar um corpo arbitrariamente grande na memória.
-async function lerBytesComLimite(
-  corpo: ReadableStream<Uint8Array> | null,
+async function lerCorpoComLimite(
+  requisicao: Request,
   limite: number,
-): Promise<Buffer> {
-  if (!corpo) {
-    return Buffer.alloc(0);
+  criarErroLimite: () => ErroApp,
+): Promise<Blob> {
+  if (Number(requisicao.headers.get('content-length')) > limite) {
+    throw criarErroLimite();
   }
-  const leitor = corpo.getReader();
-  const partes: Uint8Array[] = [];
+  if (!requisicao.body) {
+    return new Blob([]);
+  }
+  const leitor = requisicao.body.getReader();
+  const partes: Uint8Array<ArrayBuffer>[] = [];
   let total = 0;
   for (;;) {
     const { done, value } = await leitor.read();
@@ -54,36 +89,93 @@ async function lerBytesComLimite(
     total += value.byteLength;
     if (total > limite) {
       await leitor.cancel();
-      throw erroCorpoGrande();
+      throw criarErroLimite();
     }
-    partes.push(value);
+    partes.push(ehVisaoDeArrayBuffer(value) ? value : new Uint8Array(value));
   }
-  return Buffer.concat(partes);
+  return new Blob(partes);
 }
 
 export async function lerCorpoJson(requisicao: Request): Promise<unknown> {
-  const tipoConteudo = requisicao.headers.get('content-type')?.trim() ?? '';
-  if (!TIPO_CONTEUDO_JSON.test(tipoConteudo)) {
-    throw new ErroApp(mensagensApi.tipoConteudo, {
-      status: STATUS_ERRO.TIPO_NAO_SUPORTADO,
-      codigo: CODIGOS_ERRO_API.TIPO_CONTEUDO,
-    });
-  }
-  const tamanhoDeclarado = Number(requisicao.headers.get('content-length'));
-  if (tamanhoDeclarado > LIMITES_CORPO_API.BYTES_MAXIMOS) {
-    throw erroCorpoGrande();
-  }
-  const bytes = await lerBytesComLimite(
-    requisicao.body,
+  exigirTipoConteudo(requisicao, TIPO_CONTEUDO_JSON, mensagensApi.tipoConteudo);
+  const corpo = await lerCorpoComLimite(
+    requisicao,
     LIMITES_CORPO_API.BYTES_MAXIMOS,
+    erroCorpoGrande,
   );
   try {
     return JSON.parse(
-      new TextDecoder('utf-8', { fatal: true }).decode(bytes),
+      new TextDecoder('utf-8', { fatal: true }).decode(
+        await corpo.arrayBuffer(),
+      ),
     ) as unknown;
   } catch {
     throw erroJsonInvalido();
   }
+}
+
+export type ArquivoRecebidoApi = {
+  nomeArquivo: string;
+  conteudo: Uint8Array;
+};
+
+async function lerFormularioMultipart(
+  corpo: Blob,
+  tipoConteudo: string,
+): Promise<FormData> {
+  try {
+    return await new Response(corpo, {
+      headers: { 'content-type': tipoConteudo },
+    }).formData();
+  } catch {
+    throw erroMultipartInvalido();
+  }
+}
+
+function exigirApenasCampo(formulario: FormData, campo: string): void {
+  const desconhecidos = [...new Set(formulario.keys())].filter(
+    (nome) => nome !== campo,
+  );
+  if (desconhecidos.length > 0) {
+    throw new ErroApp(mensagensApi.campoDesconhecido(desconhecidos), {
+      status: STATUS_ERRO.REQUISICAO_INVALIDA,
+      codigo: CODIGOS_ERRO_API.DADOS_INVALIDOS,
+    });
+  }
+}
+
+async function lerArquivoRecebido(
+  valor: FormDataEntryValue,
+): Promise<ArquivoRecebidoApi> {
+  if (!(valor instanceof File)) {
+    throw erroMultipartInvalido();
+  }
+  return {
+    nomeArquivo: valor.name,
+    conteudo: new Uint8Array(await valor.arrayBuffer()),
+  };
+}
+
+// Quantidade, tamanho, tipo e assinatura de cada arquivo são conferidos pelo
+// serviço de anexos, com as mesmas regras do envio pela tela.
+export async function lerArquivosMultipart(
+  requisicao: Request,
+  campo: string,
+  criarErroLimite: () => ErroApp,
+): Promise<ArquivoRecebidoApi[]> {
+  const tipoConteudo = exigirTipoConteudo(
+    requisicao,
+    TIPO_CONTEUDO_MULTIPART,
+    mensagensApi.tipoConteudoArquivos,
+  );
+  const corpo = await lerCorpoComLimite(
+    requisicao,
+    LIMITES_CORPO_API.BYTES_MAXIMOS_ARQUIVOS,
+    criarErroLimite,
+  );
+  const formulario = await lerFormularioMultipart(corpo, tipoConteudo);
+  exigirApenasCampo(formulario, campo);
+  return Promise.all(formulario.getAll(campo).map(lerArquivoRecebido));
 }
 
 type DefinicaoParametros = {

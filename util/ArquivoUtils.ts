@@ -37,6 +37,15 @@ function montarParametrosNome(nomeArquivo: string): string {
   return `filename="${nomeAscii}"; filename*=UTF-8''${codificarRfc5987(nomeArquivo)}`;
 }
 
+// nosniff e a CSP sandbox vão na própria resposta, além dos cabeçalhos
+// globais do next.config: se o arquivo for aberto em vez de baixado, não roda
+// script nem carrega recurso algum.
+export const CABECALHOS_ARQUIVO_PRIVADO = {
+  'Cache-Control': 'private, no-store',
+  'X-Content-Type-Options': 'nosniff',
+  'Content-Security-Policy': "default-src 'none'; sandbox",
+} as const;
+
 // RFC 6266: `filename` em ASCII para clientes antigos e `filename*` com o
 // nome original em UTF-8. Aspas e barras não podem fechar o parâmetro.
 export function montarCabecalhoDownload(nomeArquivo: string): string {

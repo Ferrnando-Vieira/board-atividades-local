@@ -70,8 +70,6 @@ type PropriedadesTelaAparencia = {
   acesso: AcessoPainel;
 };
 
-// O proprietário edita a aparência do board; um link nomeado, a própria (a
-// página confere qual). As rotas de imagem usam o prefixo do acesso.
 export default function TelaAparencia({ acesso }: PropriedadesTelaAparencia) {
   const banco = obterBancoAplicacao();
   const escopo = acesso.escopoAparencia;

@@ -1,3 +1,7 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { LIMITES_ANEXO } from '@/config/anexos';
 import { CATALOGO_API } from '@/servidor/api/catalogoApi';
 import { montarUrl } from '@/servidor/mcp/clienteApiBoard';
 import {
@@ -5,9 +9,23 @@ import {
   FERRAMENTAS_MCP,
   montarRequisicaoFerramenta,
 } from '@/servidor/mcp/ferramentasMcp';
+import type { ResultadoFerramenta } from '@/servidor/mcp/protocoloMcp';
+import { CONTEUDOS_ANEXO } from '@/tests/suporte/fabricasAnexos';
 
 const URL_API = 'http://127.0.0.1:3000/api/v1';
 const TOKEN = 'bat_token-de-teste';
+
+function lerTexto(resultado: ResultadoFerramenta): string | undefined {
+  const [conteudo] = resultado.content;
+  return conteudo?.type === 'text' ? conteudo.text : undefined;
+}
+
+function respostaArquivo(tipoConteudo: string, conteudo: Uint8Array): Response {
+  return new Response(new Uint8Array(conteudo), {
+    status: 200,
+    headers: { 'Content-Type': tipoConteudo },
+  });
+}
 
 function respostaJson(status: number, corpo: unknown): Response {
   return new Response(JSON.stringify(corpo), {
@@ -115,7 +133,7 @@ describe('ferramentasMcp', () => {
 
     expect(buscar).not.toHaveBeenCalled();
     expect(resultado.isError).toBe(true);
-    expect(resultado.content[0]?.text).toContain('Argumentos inválidos');
+    expect(lerTexto(resultado)).toContain('Argumentos inválidos');
   });
 
   it('deve enviar o token e devolver os dados da API', async () => {
@@ -164,7 +182,7 @@ describe('ferramentasMcp', () => {
     );
 
     expect(resultado.isError).toBe(true);
-    expect(resultado.content[0]?.text).toBe(
+    expect(lerTexto(resultado)).toBe(
       'Erro 409 (conflito-de-versao): A atividade foi alterada.\n- versaoEsperada: Desatualizada.',
     );
   });
@@ -186,9 +204,237 @@ describe('ferramentasMcp', () => {
     );
 
     expect(desligado.isError).toBe(true);
-    expect(desligado.content[0]?.text).toContain('npm run dev');
+    expect(lerTexto(desligado)).toContain('npm run dev');
     expect(semToken.isError).toBe(true);
-    expect(semToken.content[0]?.text).toContain('BOARD_API_TOKEN');
+    expect(lerTexto(semToken)).toContain('BOARD_API_TOKEN');
+  });
+
+  it('deve recusar posicao em mover_atividade, que não altera a ordem', async () => {
+    const buscar = jest.fn();
+
+    const resultado = await executarFerramenta(
+      { urlApi: URL_API, token: TOKEN, buscar },
+      'mover_atividade',
+      { id: 7, versaoEsperada: 3, statusId: 2, posicao: 0 },
+    );
+
+    expect(buscar).not.toHaveBeenCalled();
+    expect(resultado.isError).toBe(true);
+  });
+
+  it('deve avisar que a operação pode ter sido gravada quando o tempo esgota', async () => {
+    const resultado = await executarFerramenta(
+      {
+        urlApi: URL_API,
+        token: TOKEN,
+        buscar: jest.fn(() =>
+          Promise.reject(new DOMException('tempo', 'TimeoutError')),
+        ),
+      },
+      'criar_atividade',
+      { titulo: 'Conferir fretes' },
+    );
+
+    expect(resultado.isError).toBe(true);
+    expect(lerTexto(resultado)).toContain('pode ter sido gravada');
+    expect(lerTexto(resultado)).not.toContain('npm run dev');
+  });
+
+  it('deve montar os caminhos de histórico, lembrete da atividade e solicitante padrão', () => {
+    expect(
+      montarRequisicaoFerramenta('ler_historico_atividade', { id: 7 }),
+    ).toEqual(
+      expect.objectContaining({
+        metodo: 'GET',
+        caminho: '/api/v1/atividades/7/historico',
+      }),
+    );
+    expect(
+      montarRequisicaoFerramenta('definir_lembrete_atividade', {
+        id: 7,
+        versaoEsperada: 2,
+        lembreteData: '2026-10-20',
+        lembreteHora: '09:00',
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        metodo: 'PUT',
+        caminho: '/api/v1/atividades/7/lembrete',
+        corpo: {
+          versaoEsperada: 2,
+          lembreteData: '2026-10-20',
+          lembreteHora: '09:00',
+        },
+      }),
+    );
+    expect(
+      montarRequisicaoFerramenta('excluir_lembrete_atividade', {
+        id: 7,
+        versaoEsperada: 3,
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        metodo: 'DELETE',
+        caminho: '/api/v1/atividades/7/lembrete',
+        consulta: { versaoEsperada: 3 },
+      }),
+    );
+    expect(
+      montarRequisicaoFerramenta('desativar_lembrete_atividade', {
+        id: 7,
+        versaoEsperada: 3,
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        caminho: '/api/v1/atividades/7/lembrete/desativar',
+      }),
+    );
+    expect(
+      montarRequisicaoFerramenta('definir_solicitante_padrao', {
+        nome: 'Financeiro',
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        metodo: 'PUT',
+        caminho: '/api/v1/solicitantes/padrao',
+        corpo: { nome: 'Financeiro' },
+      }),
+    );
+  });
+
+  describe('anexos', () => {
+    let diretorio: string;
+
+    beforeEach(() => {
+      diretorio = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-anexos-'));
+    });
+
+    afterEach(() => {
+      fs.rmSync(diretorio, { recursive: true, force: true });
+    });
+
+    it('deve montar os caminhos com o id da atividade e do anexo', () => {
+      expect(
+        montarRequisicaoFerramenta('remover_anexo', { id: 7, anexoId: 12 }),
+      ).toEqual(
+        expect.objectContaining({
+          metodo: 'DELETE',
+          caminho: '/api/v1/atividades/7/anexos/12',
+        }),
+      );
+      expect(
+        montarRequisicaoFerramenta('ler_anexo', { id: 7, anexoId: 12 }),
+      ).toEqual(
+        expect.objectContaining({
+          metodo: 'GET',
+          caminho: '/api/v1/atividades/7/anexos/12',
+        }),
+      );
+      expect(montarRequisicaoFerramenta('listar_anexos', { id: 7 })).toEqual(
+        expect.objectContaining({ caminho: '/api/v1/atividades/7/anexos' }),
+      );
+    });
+
+    it('deve ler os arquivos locais e enviá-los em multipart no campo "arquivo"', async () => {
+      const caminho = path.join(diretorio, 'print.png');
+      fs.writeFileSync(caminho, CONTEUDOS_ANEXO.png);
+      const buscar = jest.fn<Promise<Response>, Parameters<typeof fetch>>(() =>
+        Promise.resolve(respostaJson(201, { dados: [{ id: 12 }] })),
+      );
+
+      const resultado = await executarFerramenta(
+        { urlApi: URL_API, token: TOKEN, buscar },
+        'anexar_arquivos',
+        { id: 7, arquivos: [caminho] },
+      );
+
+      expect(resultado.isError).toBeUndefined();
+      const [url, opcoes] = buscar.mock.calls[0] ?? [];
+      expect(url).toBe('http://127.0.0.1:3000/api/v1/atividades/7/anexos');
+      expect(opcoes?.headers).not.toHaveProperty('Content-Type');
+      const corpo = opcoes?.body;
+      expect(corpo).toBeInstanceOf(FormData);
+      const arquivos = (corpo as FormData).getAll('arquivo') as File[];
+      expect(arquivos.map((arquivo) => arquivo.name)).toEqual(['print.png']);
+      expect(new Uint8Array(await arquivos[0]!.arrayBuffer())).toEqual(
+        CONTEUDOS_ANEXO.png,
+      );
+    });
+
+    it('deve recusar caminho relativo e arquivo inexistente sem chamar a API', async () => {
+      const buscar = jest.fn();
+      const configuracao = { urlApi: URL_API, token: TOKEN, buscar };
+
+      const relativo = await executarFerramenta(
+        configuracao,
+        'anexar_arquivos',
+        { id: 7, arquivos: ['print.png'] },
+      );
+      const inexistente = await executarFerramenta(
+        configuracao,
+        'anexar_arquivos',
+        { id: 7, arquivos: [path.join(diretorio, 'nao-existe.png')] },
+      );
+
+      expect(buscar).not.toHaveBeenCalled();
+      expect(lerTexto(relativo)).toContain('caminho absoluto');
+      expect(inexistente.isError).toBe(true);
+      expect(lerTexto(inexistente)).toContain('nao-existe.png');
+    });
+
+    it('deve recusar envio acima do total por envio sem chamar a API', async () => {
+      const buscar = jest.fn();
+      const caminhos = ['a.txt', 'b.txt', 'c.txt'].map((nome) => {
+        const caminho = path.join(diretorio, nome);
+        fs.writeFileSync(caminho, '');
+        fs.truncateSync(caminho, LIMITES_ANEXO.TAMANHO_MAXIMO_BYTES - 1);
+        return caminho;
+      });
+
+      const resultado = await executarFerramenta(
+        { urlApi: URL_API, token: TOKEN, buscar },
+        'anexar_arquivos',
+        { id: 7, arquivos: caminhos },
+      );
+
+      expect(buscar).not.toHaveBeenCalled();
+      expect(resultado.isError).toBe(true);
+      expect(lerTexto(resultado)).toContain('Envie em partes');
+    });
+
+    it('deve devolver imagem como conteúdo de imagem, texto como texto e outros tipos só descritos', async () => {
+      async function lerAnexo(resposta: Response) {
+        return executarFerramenta(
+          {
+            urlApi: URL_API,
+            token: TOKEN,
+            buscar: jest.fn(() => Promise.resolve(resposta)),
+          },
+          'ler_anexo',
+          { id: 7, anexoId: 12 },
+        );
+      }
+
+      const imagem = await lerAnexo(
+        respostaArquivo('image/png', CONTEUDOS_ANEXO.png),
+      );
+      const texto = await lerAnexo(
+        respostaArquivo('text/csv', CONTEUDOS_ANEXO.texto),
+      );
+      const pdf = await lerAnexo(
+        respostaArquivo('application/pdf', CONTEUDOS_ANEXO.pdf),
+      );
+
+      expect(imagem.content).toEqual([
+        {
+          type: 'image',
+          data: Buffer.from(CONTEUDOS_ANEXO.png).toString('base64'),
+          mimeType: 'image/png',
+        },
+      ]);
+      expect(lerTexto(texto)).toBe('Data;Valor\n01/10/2026;10,50\n');
+      expect(lerTexto(pdf)).toContain('application/pdf');
+    });
   });
 
   describe('lembretes avulsos', () => {
@@ -290,7 +536,7 @@ describe('ferramentasMcp', () => {
       expect(buscar).not.toHaveBeenCalled();
       for (const resultado of [semHora, situacaoInvalida]) {
         expect(resultado.isError).toBe(true);
-        expect(resultado.content[0]?.text).toContain('Argumentos inválidos');
+        expect(lerTexto(resultado)).toContain('Argumentos inválidos');
       }
     });
 

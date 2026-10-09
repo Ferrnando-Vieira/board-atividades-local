@@ -83,9 +83,7 @@ export const LEMBRETES = {
 } as const;
 
 // Cada código vira valor permitido em CHECK no banco, então incluir uma
-// permissão nova exige nova migração. `board:escrever` (status, tags e
-// solicitantes) entrou na migração 0001; anexos:* ficam reservadas para a
-// rodada de anexos e ainda não são oferecidas na interface.
+// permissão nova exige nova migração.
 export const PERMISSOES_API = [
   'board:ler',
   'board:escrever',
@@ -102,6 +100,8 @@ export const PERMISSOES_API_OFERECIDAS = [
   'board:escrever',
   'atividades:ler',
   'atividades:escrever',
+  'anexos:ler',
+  'anexos:escrever',
 ] as const satisfies readonly PermissaoApi[];
 
 export type PermissaoApiOferecida = (typeof PERMISSOES_API_OFERECIDAS)[number];
@@ -129,8 +129,6 @@ export const LIMITES_TEXTO = {
   AUTOR_HISTORICO: 120,
 } as const;
 
-// Limites de entrada contra payloads abusivos; o corpo de uma Server Action
-// já é limitado a 1 MB pelo Next.
 export const LIMITES_COLECAO = {
   TAGS_POR_ATIVIDADE: 20,
   ITENS_POR_ORDENACAO: 10000,

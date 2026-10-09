@@ -1,4 +1,3 @@
-// Um lembrete pertence a uma atividade ou é avulso (sem cartão).
 export type OrigemLembrete = 'atividade' | 'avulso';
 
 // Formato que a sincronização devolve ao navegador: só o que a central de
@@ -18,7 +17,6 @@ export type NotificacaoLembreteExibida = {
   rotaAtividade: string | null;
 };
 
-// Lembrete ainda por disparar, para a lista "Próximos".
 export type LembreteProximoExibido = Omit<
   NotificacaoLembreteExibida,
   'atrasado'

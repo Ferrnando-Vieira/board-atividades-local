@@ -157,7 +157,6 @@ export default function EdicaoAtividade({
     return () => window.clearTimeout(espera);
   }, [salvaSobreVersao]);
 
-  // Ao abrir a edição: fotografia inicial dos campos e foco no título.
   useEffect(() => {
     if (!editando) {
       instantaneoRef.current = null;
@@ -174,7 +173,6 @@ export default function EdicaoAtividade({
     }
   }, [editando]);
 
-  // Fechar o modal no meio da edição (Esc, × ou fundo) passa por aqui.
   useEffect(() => {
     if (!editando || !controleModal) {
       return;

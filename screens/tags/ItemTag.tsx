@@ -23,7 +23,6 @@ import { lerValorTexto } from '@/util/FormularioUtils';
 type PropriedadesItemTag = {
   tag: TagGerenciavel;
   credencial: string | null;
-  // Datalist com os solicitantes cadastrados, renderizada pela tela.
   idListaSolicitantes: string;
 };
 

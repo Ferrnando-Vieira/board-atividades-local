@@ -1,9 +1,12 @@
+import type { z } from 'zod';
+import { ehImagemExibivel } from '@/config/anexos';
+import type { AnexoResumo } from '@/servidor/anexos/consultasAnexos';
 import type {
+  AnexoApi,
   AtividadeApi,
   esquemaLembreteApi,
   esquemaStatusApi,
 } from '@/servidor/api/esquemasApi';
-import type { z } from 'zod';
 import type { ExecutorBanco } from '@/servidor/banco/conexao';
 import {
   CODIGO_ATIVIDADE_INEXISTENTE,
@@ -13,6 +16,7 @@ import {
 import {
   consultarDetalheAtividade,
   type AtividadeDetalhada,
+  type DetalheAtividade,
 } from '@/servidor/atividades/consultasAtividades';
 import { mensagensAtividades } from '@/servidor/atividades/mensagensAtividades';
 import {
@@ -34,6 +38,10 @@ import {
   type LembreteAvulso,
 } from '@/servidor/lembretes/lembretesAvulsosServico';
 import { obterMomentoLocal } from '@/util/DataUtils';
+import {
+  montarMarcacaoImagem,
+  montarReferenciaAnexo,
+} from '@/util/DescricaoUtils';
 import { ErroApp, STATUS_ERRO } from '@/util/ErroApp';
 import { ordenarNaColuna } from '@/util/OrdenacaoAtividadesUtils';
 
@@ -90,10 +98,28 @@ export function mapearAtividadeApi(
   };
 }
 
+export function mapearAnexoApi(anexo: AnexoResumo): AnexoApi {
+  const imagem = ehImagemExibivel(anexo.tipoConteudo);
+  return {
+    id: anexo.id,
+    nome: anexo.nomeOriginal,
+    tipoConteudo: anexo.tipoConteudo,
+    tamanhoBytes: anexo.tamanhoBytes,
+    criadoEm: anexo.criadoEm,
+    imagem,
+    markdown: imagem
+      ? montarMarcacaoImagem(
+          anexo.nomeOriginal,
+          montarReferenciaAnexo(anexo.id),
+        )
+      : null,
+  };
+}
+
 export function exigirAtividadeDetalhada(
   executor: ExecutorBanco,
   atividadeId: number,
-): AtividadeDetalhada {
+): DetalheAtividade {
   const consulta = consultarDetalheAtividade(executor, atividadeId);
   if (!consulta) {
     throw new ErroApp(mensagensAtividades.atividadeInexistente, {

@@ -42,8 +42,10 @@ export type FerramentaMcp = {
 
 export type ConteudoTexto = { type: 'text'; text: string };
 
+export type ConteudoImagem = { type: 'image'; data: string; mimeType: string };
+
 export type ResultadoFerramenta = {
-  content: ConteudoTexto[];
+  content: (ConteudoTexto | ConteudoImagem)[];
   structuredContent?: Record<string, unknown>;
   isError?: boolean;
 };

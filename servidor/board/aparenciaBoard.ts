@@ -104,7 +104,6 @@ export function consultarAparenciaBoard(
   return linha ? converterLinha(linha) : APARENCIA_PADRAO;
 }
 
-// Cores que representam o fundo em uso, para o cálculo de contraste.
 export function obterAmostrasFundo(configuracao: ConfiguracaoFundo): string[] {
   if (configuracao.tipo === 'imagem' && configuracao.imagem) {
     return configuracao.imagem.corMedia

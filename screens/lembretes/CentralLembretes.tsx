@@ -70,7 +70,6 @@ function lerSituacaoNoServidor(): SituacaoNotificacoesNavegador {
   return SITUACAO_NO_SERVIDOR;
 }
 
-// Atividade abre o detalhe; lembrete avulso abre a página de lembretes.
 function montarDestino(
   lembrete: Pick<LembreteProximoExibido, 'rotaAtividade' | 'lembreteAvulsoId'>,
 ): string {

@@ -164,7 +164,6 @@ export const CONFIGURACAO_FUNDO_PADRAO: ConfiguracaoFundo = {
   imagem: null,
 };
 
-// Uma linha de aparência, do board ou de um link (as colunas são as mesmas).
 export type LinhaAparencia = Omit<typeof fundosBoard.$inferSelect, 'boardId'>;
 
 export type ValoresAparencia = Partial<

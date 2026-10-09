@@ -55,8 +55,6 @@ export type CorNomeada = {
   nome: string;
 };
 
-// Sugestões rápidas nos seletores de cor das superfícies (claras e escuras,
-// para combinar com fundos claros ou escuros).
 export const CORES_SUGERIDAS_SUPERFICIE: readonly CorNomeada[] = [
   { cor: '#ffffff', nome: 'Branco' },
   { cor: '#f4f6f3', nome: 'Gelo esverdeado' },

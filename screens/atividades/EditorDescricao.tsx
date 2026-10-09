@@ -56,7 +56,6 @@ const BOTOES_FORMATACAO: readonly BotaoFormatacao[] = [
   { formatacao: 'link', conteudo: icone('link') },
 ];
 
-// Atalhos comuns de editores (Ctrl ou Cmd): negrito, itálico, link e código.
 const ATALHOS: Readonly<Record<string, FormatacaoDescricao>> = {
   b: 'negrito',
   i: 'italico',

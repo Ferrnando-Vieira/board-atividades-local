@@ -218,7 +218,7 @@ Essa montagem não faz parte do projeto e não foi validada nele. O exemplo é u
 
 ## 7. API para agentes
 
-A referência completa está em [`docs/api-agentes.md`](docs/api-agentes.md): permissões, formato JSON das respostas e erros, concorrência, os 27 endpoints e exemplos em PowerShell e curl. A tela **Integrações** mostra o endereço base e o catálogo de endpoints.
+A referência completa está em [`docs/api-agentes.md`](docs/api-agentes.md): permissões, formato JSON das respostas e erros, concorrência, os 37 endpoints e exemplos em PowerShell e curl. A tela **Integrações** mostra o endereço base e o catálogo de endpoints.
 
 - **Endereço base:** `<URL_BASE_LAN>/api/v1`. Para um agente que roda nesta máquina (Kiro, Claude Code, Claude Cowork), use `http://127.0.0.1:3000/api/v1` mesmo com a LAN liberada: o token não passa pela rede.
 - **Criar token:** **Integrações → Gerar token**, com um nome (por exemplo, "Kiro no notebook"), as permissões e a validade (1, 7, 30, 90 ou 365 dias, ou sem expiração). O token começa com `bat_` e aparece uma vez: copie na hora.
@@ -237,7 +237,7 @@ Invoke-RestMethod 'http://127.0.0.1:3000/api/v1' -Headers @{ Authorization = "Be
 
 A resposta lista as permissões do token e os endpoints. Para enviar JSON com acentos pelo Windows PowerShell 5.1, informe `charset=utf-8` no `-ContentType`, como nos exemplos de `docs/api-agentes.md`.
 
-**Servidor MCP (Claude Code, Kiro e outros agentes).** O `npm run mcp` inicia um servidor MCP por stdio com uma ferramenta para cada endpoint (`identificar_token`, `listar_atividades`, `criar_atividade`, `mover_atividade`, `criar_lembrete`, `editar_tag`…). Ele só chama a API acima, com um token de **Integrações**:
+**Servidor MCP (Claude Code, Kiro e outros agentes).** O `npm run mcp` inicia um servidor MCP por stdio com uma ferramenta para cada endpoint (`identificar_token`, `listar_atividades`, `criar_atividade`, `mover_atividade`, `anexar_arquivos`, `ler_anexo`, `definir_lembrete_atividade`, `criar_lembrete`, `editar_tag`…). Com `anexar_arquivos` o agente envia arquivos desta máquina e põe imagens na descrição; com `ler_anexo`, vê as imagens já anexadas. Ele só chama a API acima, com um token de **Integrações**:
 
 1. Gere o token com as permissões que o agente pode ter.
 2. No `.env.local`, acrescente `BOARD_API_TOKEN=bat_…` (o arquivo não vai para o Git). Com o board em outra porta ou máquina, informe também `BOARD_API_URL` (padrão `http://127.0.0.1:<PORTA>/api/v1`).
@@ -282,7 +282,8 @@ O proprietário também gera links em **Compartilhar board**, no quadro. Cada li
 - **Download:** sempre como arquivo baixado (`Content-Disposition: attachment`, `application/octet-stream`, `nosniff` e CSP `sandbox`), por `/anexos/<id>` (sessão) ou `/compartilhado/<token>/anexos/<id>` (link).
 - **Backup:** `npm run backup:criar` copia os anexos ativos junto com o banco (seção 11).
 - **Limpeza:** `npm run anexos:limpar` apaga arquivos sem anexo ativo com mais de 10 minutos (sobras de envio interrompido ou de remoção que não conseguiu apagar o arquivo). Pode rodar com o servidor no ar.
-- A conferência de tipo olha a extensão e a assinatura, não o conteúdo interno (macro de DOCX, arquivos dentro de um ZIP). Não há antivírus, e a API ainda não tem endpoints de anexos.
+- A conferência de tipo olha a extensão e a assinatura, não o conteúdo interno (macro de DOCX, arquivos dentro de um ZIP). Não há antivírus.
+- **Pela API e pelo MCP:** listar, enviar, ler e remover anexos, com as permissões `anexos:ler` e `anexos:escrever` (seção 8 e `docs/api-agentes.md`).
 
 **Descrição formatada**
 
@@ -290,12 +291,13 @@ O proprietário também gera links em **Compartilhar board**, no quadro. Cada li
 - **Trecho de código:** clique em **Bloco de código** e cole o trecho dentro (ou selecione o texto e clique). No detalhe, cada bloco tem o botão **Copiar**.
 - **Imagens no texto:** cole uma captura de tela (Ctrl+V), arraste uma imagem para o campo ou use **Inserir imagem**. A imagem vira anexo da atividade quando ela é salva (na criação ou na edição); até lá, fica só na tela, e cancelar não deixa nada para trás. Colar com texto na área de transferência (por exemplo, células do Excel) cola o texto.
 - O texto guarda a imagem como `![nome](anexo:<id>)`, e ela só aparece se o id for um anexo de imagem da própria atividade. HTML escrito na descrição aparece como texto; links abrem em outra aba, e imagem de endereço externo vira link. Remover um anexo usado na descrição avisa que a imagem passará a aparecer como indisponível.
-- Pela API e pelo MCP, a descrição é lida e gravada em Markdown (sem envio de imagens).
+- Pela API e pelo MCP, a descrição é lida e gravada em Markdown. Para pôr uma imagem, o agente anexa o arquivo e usa o `markdown` devolvido (`![nome](anexo:<id>)`).
 
 **Histórico de alterações**
 
 - A seção **Histórico de alterações**, no fim do detalhe da atividade, lista quem fez cada alteração e quando: criação, edição (com o antes e depois de cada campo e, para a descrição, os dois textos lado a lado), mudança de status, tags pelo cartão, arquivamento, restauração e anexos enviados ou removidos.
 - O autor é o administrador (com o usuário), o link completo (com o nome do link) ou a integração (com o nome do token, inclusive o do MCP). Quem entra por um link vê só a origem, sem nomes.
+- Agentes leem o histórico por `GET /api/v1/atividades/{id}/historico` ou pela ferramenta `ler_historico_atividade`.
 - Começa a contar a partir desta versão (migração 0006). Não registra reordenar na mesma coluna, lembretes nem as operações em lote de **Status** e **Tags** (excluir status movendo as atividades, renomear ou excluir tag).
 
 ## 10. Aparência e lembretes
@@ -312,7 +314,7 @@ O proprietário também gera links em **Compartilhar board**, no quadro. Cada li
 
 O banco guarda só chaves do catálogo, cores `#rrggbb`, porcentagens e ângulos conferidos por CHECK, nunca CSS ou URL; o estilo é montado no servidor. Os cartões ficam sempre sobre superfície opaca. A aparência do board fica em `fundos_board`; a de cada link nomeado, em `aparencias_link`.
 
-**Lembretes.** Um por atividade, gerenciado só pelo proprietário na seção **Lembrete** do detalhe da atividade: criar ou remarcar (data e hora no fuso do board, `America/Sao_Paulo`), desativar, reativar e excluir. Horário no passado é recusado.
+**Lembretes.** Um por atividade, gerenciado só pelo proprietário na seção **Lembrete** do detalhe da atividade: criar ou remarcar (data e hora no fuso do board, `America/Sao_Paulo`), desativar, reativar e excluir. Horário no passado é recusado. Agentes fazem o mesmo pela API e pelo MCP, com a permissão `atividades:escrever`.
 
 - **Central de lembretes:** botão **Lembretes** no cabeçalho do proprietário, com os avisos disparados ainda não dispensados. A lista sobrevive a recarregar a página e **Dispensar** é gravado no banco.
 - **Quando dispara:** a página verifica a cada 30 segundos e ao voltar para a aba, só com o board aberto no navegador do proprietário. Com o board fechado no horário, o aviso aparece como **Atrasado** na próxima abertura. Atividade arquivada não dispara.

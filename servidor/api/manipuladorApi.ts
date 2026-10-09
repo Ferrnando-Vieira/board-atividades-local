@@ -55,7 +55,7 @@ export type RespostaApi = {
 
 type ExecutorRotaApi = (
   execucao: ExecucaoApi,
-) => RespostaApi | Promise<RespostaApi>;
+) => RespostaApi | Response | Promise<RespostaApi | Response>;
 
 type OpcoesResposta = {
   status?: number;
@@ -134,11 +134,9 @@ function criarRotaApi(
       if (!METODOS_LEITURA.has(requisicao.method)) {
         publicarAlteracaoBoard();
       }
-      return responderDados(
-        resposta.dados,
-        resposta.status,
-        resposta.cabecalhos,
-      );
+      return resposta instanceof Response
+        ? resposta
+        : responderDados(resposta.dados, resposta.status, resposta.cabecalhos);
     } catch (erro) {
       return converterErroEmResposta(erro);
     }

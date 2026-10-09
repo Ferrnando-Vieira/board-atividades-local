@@ -58,6 +58,9 @@ export const textosIntegracoes = {
     'atividades:ler': 'Ler atividades (inclusive busca e arquivadas)',
     'atividades:escrever':
       'Criar, editar, mover, priorizar e arquivar atividades',
+    'anexos:ler': 'Listar e ler os anexos das atividades',
+    'anexos:escrever':
+      'Enviar e remover anexos, inclusive imagens da descrição',
   } satisfies Record<PermissaoApiOferecida, string>,
   nuncaUsado: 'nunca usado',
   semExpiracaoCurto: 'não expira',

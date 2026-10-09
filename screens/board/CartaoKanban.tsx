@@ -27,7 +27,6 @@ import {
 export const CLASSES_ALCA_ARRASTE =
   'inline-flex shrink-0 cursor-grab items-center justify-center rounded-lg text-current opacity-60 transition-opacity select-none hover:bg-current/10 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-primaria active:cursor-grabbing md:opacity-0 md:group-hover/arraste:opacity-70 md:group-focus-within/arraste:opacity-70 [@media(hover:none)]:opacity-70';
 
-// Faixa lateral fina na cor do nível de prioridade (Aparência).
 const CLASSES_FAIXA_NIVEL: Record<NivelPrioridade, string> = {
   critica: 'before:bg-(--cor-prioridade-critica)',
   alta: 'before:bg-(--cor-prioridade-alta)',

@@ -135,7 +135,6 @@ type PropriedadesDescricaoFormatada = {
   className?: string;
 };
 
-// Usada no detalhe (servidor) e na visualização do editor (navegador).
 export default function DescricaoFormatada({
   texto,
   imagens,

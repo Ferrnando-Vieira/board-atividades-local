@@ -10,6 +10,7 @@ import {
   esquemaAtualizacaoAtividadeApi,
   esquemaConsultaAtividadesApi,
   esquemaCriacaoAtividadeApi,
+  esquemaHistoricoApi,
   esquemaListaAtividadesApi,
   esquemaMovimentoAtividadeApi,
   esquemaVersaoApi,
@@ -55,6 +56,7 @@ import {
   listarStatusDoBoard,
 } from '@/servidor/board/boardRepositorio';
 import { mensagensStatus } from '@/servidor/board/mensagensStatus';
+import { consultarHistoricoAtividade } from '@/servidor/historico/consultasHistorico';
 import {
   listarIdsSolicitantesPorNomes,
   listarIdsTagsPorNomes,
@@ -164,6 +166,18 @@ export const rotaLerAtividade = criarRotaDoEndpoint(
       esquemaAtividadeApi,
       obterAtividadeApi(banco, lerIdentificadorApi(parametros)),
     ),
+);
+
+export const rotaLerHistoricoAtividade = criarRotaDoEndpoint(
+  ENDPOINTS_API.lerHistoricoAtividade,
+  ({ banco, parametros }) => {
+    const atividadeId = lerIdentificadorApi(parametros);
+    exigirAtividadeDetalhada(banco, atividadeId);
+    return respostaApi(
+      esquemaHistoricoApi,
+      consultarHistoricoAtividade(banco, atividadeId),
+    );
+  },
 );
 
 function escolher<T>(enviado: T | undefined, atual: T): T {

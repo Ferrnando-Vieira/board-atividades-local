@@ -155,14 +155,12 @@ export const textosAtividades = {
   avisoImagemNaDescricao:
     'Esta imagem aparece na descrição e passará a ser exibida lá como indisponível.',
   anexosSomenteLeitura: 'Restaure a atividade para enviar ou remover anexos.',
-  // Anexos escolhidos no formulário de criação (enviados ao salvar).
   rotuloAnexosNovos: 'Anexos',
   dicaAnexosNovos: (tamanhoMaximo: string, quantidadePorEnvio: number) =>
     `Opcional. Até ${quantidadePorEnvio} arquivos (contando as imagens coladas na descrição), com até ${tamanhoMaximo} cada. São enviados quando a atividade for criada.`,
   botaoEscolherAnexos: 'Escolher arquivos',
   removerAnexoPendente: (nome: string) => `Tirar ${nome} da lista`,
   tirarDaLista: 'Tirar',
-  // Descrição em Markdown.
   dicaDescricao:
     'Use a barra para formatar (Markdown). Cole (Ctrl+V) ou arraste imagens para inseri-las no texto; elas são enviadas ao salvar.',
   abaEscrever: 'Escrever',
@@ -197,7 +195,6 @@ export const textosAtividades = {
   rotuloCopiarCodigo: 'Copiar o código',
   codigoCopiado: 'Código copiado.',
   codigoSelecionado: 'Código selecionado: pressione Ctrl+C para copiar.',
-  // Histórico.
   rotuloHistorico: 'Histórico de alterações',
   resumoHistorico: (quantidade: number) =>
     quantidade === 1 ? '1 registro' : `${quantidade} registros`,

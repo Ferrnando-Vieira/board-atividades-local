@@ -91,7 +91,6 @@ export default function TelaDetalheAtividade({
     arquivada && acesso.exibeArquivadas ? ROTAS.ARQUIVADAS : ROTAS.INICIO;
   const emModal = variante === 'modal';
   const idTitulo = montarIdTituloAtividade(atividade.id);
-  // Editar acontece aqui mesmo (no modal ou na página), sem outra tela.
   const opcoesEdicao =
     acesso.permiteGestao && !arquivada
       ? consultarOpcoesFormularioAtividade(banco)

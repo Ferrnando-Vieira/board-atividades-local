@@ -116,7 +116,6 @@ export function resolverCoresPrioridade(
   };
 }
 
-// Cada nível ganha a cor do selo e a cor do texto com melhor contraste.
 export function montarVariaveisPrioridade(
   cores: CoresPrioridade,
 ): VariaveisCss {

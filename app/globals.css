@@ -134,7 +134,6 @@
   }
 }
 
-/* Rolagem fina nas colunas e na faixa horizontal do quadro. */
 @utility rolagem-fina {
   scrollbar-width: thin;
   scrollbar-color: rgb(29 42 28 / 0.28) transparent;

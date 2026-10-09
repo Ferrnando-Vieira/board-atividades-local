@@ -30,7 +30,6 @@ const ATALHOS_ANGULO = Array.from(
   { length: LIMITES_GRADIENTE.ANGULO_MAXIMO / PASSO_ATALHO_ANGULO },
   (_, indice) => indice * PASSO_ATALHO_ANGULO,
 );
-// Seta que aponta para a direção do ângulo (0° = para cima).
 const SETA_DIRECAO = '↑';
 
 function limitarAngulo(valor: number): number {

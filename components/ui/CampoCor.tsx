@@ -22,8 +22,6 @@ type PropriedadesCampoCor = {
 
 const ROTULO_ESCOLHER = 'Escolher a cor';
 
-// Seletor nativo de cor mais uma paleta de sugestões (botões com o nome da
-// cor no aria-label). O valor vai no formulário pelo próprio <input>.
 export default function CampoCor({
   nome,
   rotulo,

@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { CODIGOS_ERRO_API, mensagensApi } from '@/servidor/api/mensagensApi';
 import { CODIGO_BANCO_AUSENTE } from '@/servidor/web/bancoAplicacao';
+import type { ConteudoAnexo } from '@/servidor/anexos/armazenamentoAnexos';
+import type { AnexoParaDownload } from '@/servidor/anexos/consultasAnexos';
+import {
+  CABECALHOS_ARQUIVO_PRIVADO,
+  montarCabecalhoDownload,
+} from '@/util/ArquivoUtils';
 import { ehErroApp, ErroApp, STATUS_ERRO } from '@/util/ErroApp';
 
 const CABECALHOS_JSON = {
@@ -77,6 +83,22 @@ export function responderErro(
   return new Response(JSON.stringify({ erro }), {
     status,
     headers: { ...CABECALHOS_JSON, ...cabecalhos },
+  });
+}
+
+// O tipo é o gravado no envio (do catálogo, conferido pela assinatura), nunca
+// o declarado por quem enviou.
+export function responderArquivo(
+  anexo: AnexoParaDownload,
+  conteudo: ConteudoAnexo,
+): Response {
+  return new Response(conteudo.fluxo, {
+    headers: {
+      ...CABECALHOS_ARQUIVO_PRIVADO,
+      'Content-Type': anexo.tipoConteudo,
+      'Content-Disposition': montarCabecalhoDownload(anexo.nomeOriginal),
+      'Content-Length': String(conteudo.tamanhoBytes),
+    },
   });
 }
 

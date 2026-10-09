@@ -1,4 +1,6 @@
+import path from 'node:path';
 import { z } from 'zod';
+import { LIMITES_ANEXO } from '@/config/anexos';
 import { SITUACOES_LEMBRETE } from '@/config/constantes';
 import { ENDPOINTS_API, type EndpointApi } from '@/servidor/api/catalogoApi';
 import {
@@ -9,6 +11,7 @@ import {
   esquemaCriacaoLembreteApi,
   esquemaCriacaoStatusApi,
   esquemaCriacaoTagApi,
+  esquemaDefinicaoLembreteAtividadeApi,
   esquemaEdicaoTagApi,
   esquemaMovimentoAtividadeApi,
   esquemaMovimentoStatusApi,
@@ -29,8 +32,12 @@ import { textosMcp } from '@/servidor/mcp/textosMcp';
 
 type ChaveEndpoint = keyof typeof ENDPOINTS_API;
 
-type PartesRequisicao = Pick<RequisicaoApi, 'consulta' | 'corpo'> & {
+type PartesRequisicao = Pick<
+  RequisicaoApi,
+  'consulta' | 'corpo' | 'arquivos'
+> & {
   id?: number;
+  anexoId?: number;
 };
 
 type DefinicaoFerramenta = {
@@ -42,6 +49,7 @@ type DefinicaoFerramenta = {
 };
 
 const MARCADOR_ID = '{id}';
+const MARCADOR_ANEXO_ID = '{anexoId}';
 
 const identificador = (descricao: string) =>
   z.int().positive().describe(descricao);
@@ -74,6 +82,18 @@ function separarId<T extends { id: number }>(
 }
 
 const SEM_ARGUMENTOS = z.strictObject({});
+
+const ID_ATIVIDADE = z.strictObject({ id: identificador('Id da atividade') });
+
+const VERSAO_ATIVIDADE = z.strictObject({
+  id: identificador('Id da atividade'),
+  versaoEsperada,
+});
+
+const REFERENCIA_ANEXO = z.strictObject({
+  id: identificador('Id da atividade'),
+  anexoId: identificador('Id do anexo (campo "id" de listar_anexos)'),
+});
 
 // Record com todas as chaves do catálogo: endpoint novo na API sem
 // ferramenta correspondente não compila.
@@ -108,7 +128,12 @@ const DEFINICOES: Record<ChaveEndpoint, DefinicaoFerramenta> = {
         .max(LIMITE_VALORES_FILTRO)
         .optional()
         .describe('Nomes de solicitantes (qualquer um deles).'),
-      busca: z.string().optional().describe('Texto no título ou descrição.'),
+      busca: z
+        .string()
+        .optional()
+        .describe(
+          'Palavras procuradas no título, descrição, solicitante e tags; todas precisam aparecer.',
+        ),
       situacao: z
         .enum(SITUACOES_ARQUIVAMENTO)
         .optional()
@@ -143,7 +168,7 @@ const DEFINICOES: Record<ChaveEndpoint, DefinicaoFerramenta> = {
     titulo: 'Mover atividade',
     entrada: z.strictObject({
       id: identificador('Id da atividade'),
-      ...esquemaMovimentoAtividadeApi.shape,
+      ...esquemaMovimentoAtividadeApi.omit({ posicao: true }).shape,
       versaoEsperada,
     }),
     montar: (argumentos) => separarId(argumentos),
@@ -151,20 +176,86 @@ const DEFINICOES: Record<ChaveEndpoint, DefinicaoFerramenta> = {
   arquivarAtividade: definir({
     nome: 'arquivar_atividade',
     titulo: 'Arquivar atividade',
-    entrada: z.strictObject({
-      id: identificador('Id da atividade'),
-      versaoEsperada,
-    }),
+    entrada: VERSAO_ATIVIDADE,
     montar: (argumentos) => separarId(argumentos),
   }),
   desarquivarAtividade: definir({
     nome: 'desarquivar_atividade',
     titulo: 'Desarquivar atividade',
+    entrada: VERSAO_ATIVIDADE,
+    montar: (argumentos) => separarId(argumentos),
+  }),
+  lerHistoricoAtividade: definir({
+    nome: 'ler_historico_atividade',
+    titulo: 'Ler o histórico de alterações da atividade',
+    entrada: ID_ATIVIDADE,
+    montar: ({ id }) => ({ id }),
+  }),
+  listarAnexos: definir({
+    nome: 'listar_anexos',
+    titulo: 'Listar anexos da atividade',
+    entrada: ID_ATIVIDADE,
+    montar: ({ id }) => ({ id }),
+  }),
+  enviarAnexos: definir({
+    nome: 'anexar_arquivos',
+    titulo: 'Anexar arquivos à atividade',
+    dica: 'Para exibir uma imagem na descrição, coloque o "markdown" devolvido no campo descricao com atualizar_atividade, usando a versão já lida.',
     entrada: z.strictObject({
       id: identificador('Id da atividade'),
+      arquivos: z
+        .array(
+          z.string().refine(path.isAbsolute, {
+            error: textosMcp.caminhoRelativo,
+          }),
+        )
+        .min(1)
+        .max(LIMITES_ANEXO.MAXIMO_POR_ENVIO)
+        .describe('Caminhos absolutos de arquivos nesta máquina.'),
+    }),
+    montar: ({ id, arquivos }) => ({ id, arquivos }),
+  }),
+  lerAnexo: definir({
+    nome: 'ler_anexo',
+    titulo: 'Ler anexo da atividade',
+    dica: 'Imagens PNG, JPG, GIF e WebP voltam como imagem; TXT, CSV e MD, como texto; os demais tipos, só com tipo e tamanho.',
+    entrada: REFERENCIA_ANEXO,
+    montar: ({ id, anexoId }) => ({ id, anexoId }),
+  }),
+  removerAnexo: definir({
+    nome: 'remover_anexo',
+    titulo: 'Remover anexo da atividade',
+    entrada: REFERENCIA_ANEXO,
+    montar: ({ id, anexoId }) => ({ id, anexoId }),
+  }),
+  definirLembreteAtividade: definir({
+    nome: 'definir_lembrete_atividade',
+    titulo: 'Definir ou remarcar o lembrete da atividade',
+    dica: 'O aviso aparece no navegador do proprietário, com o board aberto, no horário marcado.',
+    entrada: z.strictObject({
+      id: identificador('Id da atividade'),
+      ...esquemaDefinicaoLembreteAtividadeApi.shape,
       versaoEsperada,
     }),
     montar: (argumentos) => separarId(argumentos),
+  }),
+  desativarLembreteAtividade: definir({
+    nome: 'desativar_lembrete_atividade',
+    titulo: 'Desativar o lembrete da atividade',
+    entrada: VERSAO_ATIVIDADE,
+    montar: (argumentos) => separarId(argumentos),
+  }),
+  reativarLembreteAtividade: definir({
+    nome: 'reativar_lembrete_atividade',
+    titulo: 'Reativar o lembrete da atividade',
+    entrada: VERSAO_ATIVIDADE,
+    montar: (argumentos) => separarId(argumentos),
+  }),
+  excluirLembreteAtividade: definir({
+    nome: 'excluir_lembrete_atividade',
+    titulo: 'Excluir o lembrete da atividade',
+    entrada: VERSAO_ATIVIDADE,
+    montar: ({ id, ...consulta }) => ({ id, consulta }),
   }),
   listarLembretes: definir({
     nome: 'listar_lembretes',
@@ -311,6 +402,12 @@ const DEFINICOES: Record<ChaveEndpoint, DefinicaoFerramenta> = {
     entrada: esquemaNomeApi,
     montar: (argumentos) => ({ corpo: argumentos }),
   }),
+  definirSolicitantePadrao: definir({
+    nome: 'definir_solicitante_padrao',
+    titulo: 'Definir o solicitante padrão do board',
+    entrada: esquemaNomeApi,
+    montar: (argumentos) => ({ corpo: argumentos }),
+  }),
 };
 
 function montarAnotacoes(endpoint: EndpointApi): FerramentaMcp['annotations'] {
@@ -383,14 +480,16 @@ export function montarRequisicaoFerramenta(
   if (!validacao.success) {
     return { erro: z.prettifyError(validacao.error) };
   }
-  const { id, consulta, corpo } = ferramenta.definicao.montar(
-    validacao.data as Record<string, unknown>,
-  );
+  const { id, anexoId, consulta, corpo, arquivos } =
+    ferramenta.definicao.montar(validacao.data as Record<string, unknown>);
   return {
     metodo: ferramenta.endpoint.metodo,
-    caminho: ferramenta.endpoint.caminho.replace(MARCADOR_ID, String(id)),
+    caminho: ferramenta.endpoint.caminho
+      .replace(MARCADOR_ID, String(id))
+      .replace(MARCADOR_ANEXO_ID, String(anexoId)),
     consulta,
     corpo,
+    arquivos,
   };
 }
 

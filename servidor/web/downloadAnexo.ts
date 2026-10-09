@@ -7,21 +7,13 @@ import { consultarAnexoAutorizado } from '@/servidor/anexos/consultasAnexos';
 import type { RestricaoLeitura } from '@/servidor/atividades/filtrosAtividades';
 import { obterBancoAplicacao } from '@/servidor/web/bancoAplicacao';
 import {
+  CABECALHOS_ARQUIVO_PRIVADO,
   montarCabecalhoDownload,
   montarCabecalhoExibicao,
 } from '@/util/ArquivoUtils';
 import { STATUS_ERRO } from '@/util/ErroApp';
 
 const TEXTO_NAO_ENCONTRADO = 'Anexo não encontrado.';
-
-// nosniff e a CSP sandbox também vão na própria resposta, além dos cabeçalhos
-// globais do next.config: se o arquivo for aberto em vez de baixado, não roda
-// script nem carrega recurso algum.
-const CABECALHOS_ARQUIVO_PRIVADO = {
-  'Cache-Control': 'private, no-store',
-  'X-Content-Type-Options': 'nosniff',
-  'Content-Security-Policy': "default-src 'none'; sandbox",
-} as const;
 
 export function responderAnexoNaoEncontrado(): Response {
   return new Response(TEXTO_NAO_ENCONTRADO, {

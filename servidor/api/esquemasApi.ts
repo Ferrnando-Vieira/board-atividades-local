@@ -1,9 +1,12 @@
 import { z } from 'zod';
 import {
+  CAMPOS_HISTORICO,
   LIMITES_TEXTO,
+  ORIGENS_ALTERACAO,
   PERMISSOES_API,
   PRIORIDADE,
   SITUACOES_LEMBRETE,
+  TIPOS_EVENTO_HISTORICO,
 } from '@/config/constantes';
 import { METODOS_API } from '@/servidor/api/catalogoApi';
 import { LIMITE_VALORES_FILTRO } from '@/servidor/api/limitesApi';
@@ -16,21 +19,35 @@ import { SITUACOES_ARQUIVAMENTO } from '@/servidor/atividades/filtrosAtividades'
 const identificador = z.int().positive();
 const textoOuNulo = z.string().nullable();
 
-// A descrição aparece formatada na tela; este texto chega aos agentes pelo
-// esquema das ferramentas do MCP.
-const DESCRICAO_CAMPO_DESCRICAO = `Markdown (GFM): **negrito**, _itálico_, listas, - [ ] tarefas, \`código\`, blocos \`\`\`, tabelas e links. Uma linha simples quebra a linha. Até ${LIMITES_TEXTO.DESCRICAO_ATIVIDADE} caracteres. HTML aparece como texto. Imagem só aparece se for anexo da própria atividade (![nome](anexo:ID)), enviada pela tela.`;
+// As descrições chegam aos agentes pelo esquema das ferramentas do MCP; as
+// regras continuam nos esquemas do domínio.
+const DESCRICAO_CAMPO_DESCRICAO = `Markdown (GFM): **negrito**, _itálico_, listas, - [ ] tarefas, \`código\`, blocos de código com três crases e a linguagem (\`\`\`ts), tabelas e links. Uma linha simples quebra a linha. Até ${LIMITES_TEXTO.DESCRICAO_ATIVIDADE} caracteres. HTML aparece como texto. Imagem: anexe o arquivo à atividade e use o "markdown" devolvido (![nome](anexo:ID)); só imagem anexada à própria atividade aparece.`;
 
 const camposEditaveisAtividade = {
-  titulo: z.string(),
+  titulo: z
+    .string()
+    .describe(`Até ${LIMITES_TEXTO.TITULO_ATIVIDADE} caracteres.`),
   descricao: textoOuNulo.describe(DESCRICAO_CAMPO_DESCRICAO),
-  prioridade: z.int(),
+  prioridade: z
+    .int()
+    .describe(
+      `${PRIORIDADE.MAIS_ALTA} (mais alta) a ${PRIORIDADE.MAIS_BAIXA} (mais baixa); omitida na criação: ${PRIORIDADE.PADRAO}. Define a ordem na coluna.`,
+    ),
   statusId: identificador,
-  solicitante: textoOuNulo,
-  tags: z.array(z.string()),
-  prazoData: textoOuNulo,
-  prazoHora: textoOuNulo,
-  concluidaEmData: textoOuNulo,
-  concluidaEmHora: textoOuNulo,
+  solicitante: textoOuNulo.describe(
+    'null ou vazio usa o padrão da tag ou do board; nome novo é cadastrado.',
+  ),
+  tags: z
+    .array(z.string())
+    .describe(
+      'Lista completa de nomes: substitui as tags atuais. Para acrescentar, envie as atuais mais a nova.',
+    ),
+  prazoData: textoOuNulo.describe('AAAA-MM-DD, no fuso do board.'),
+  prazoHora: textoOuNulo.describe('HH:MM; exige prazoData.'),
+  concluidaEmData: textoOuNulo.describe(
+    'AAAA-MM-DD; vale só em status que conclui.',
+  ),
+  concluidaEmHora: textoOuNulo.describe('HH:MM; exige concluidaEmData.'),
 };
 
 const { titulo: esquemaTituloApi, ...camposOpcionaisAtividade } =
@@ -99,6 +116,12 @@ export const esquemaMovimentoStatusApi = z.strictObject({
 });
 
 export const esquemaNomeApi = z.strictObject({ nome: z.string() });
+
+export const esquemaDefinicaoLembreteAtividadeApi = z.strictObject({
+  versaoEsperada: identificador,
+  lembreteData: z.string().describe('AAAA-MM-DD, no fuso do board.'),
+  lembreteHora: z.string().describe('HH:MM, no fuso do board.'),
+});
 
 // Lembretes avulsos: data e hora chegam no fuso do board, com os mesmos
 // nomes do domínio (lembreteData/lembreteHora), para que os erros de campo
@@ -192,7 +215,6 @@ export const esquemaExclusaoLembreteApi = z.strictObject({
   versaoEsperada: identificadorTexto,
 });
 
-// Saída.
 const esquemaItemNomeado = z.object({
   id: identificador,
   nome: z.string(),
@@ -298,6 +320,44 @@ export const esquemaExclusaoLembreteResultadoApi = z.object({
 export const esquemaExclusaoTagResultadoApi = z.object({
   tagId: identificador,
   atividadesAfetadas: z.int().nonnegative(),
+});
+
+export const esquemaAnexoApi = z.object({
+  id: identificador,
+  nome: z.string(),
+  tipoConteudo: z.string(),
+  tamanhoBytes: z.int().nonnegative(),
+  criadoEm: z.string(),
+  imagem: z.boolean(),
+  markdown: z.string().nullable(),
+});
+
+export type AnexoApi = z.output<typeof esquemaAnexoApi>;
+
+export const esquemaListaAnexosApi = z.array(esquemaAnexoApi);
+
+export const esquemaRemocaoAnexoResultadoApi = z.object({
+  anexoId: identificador,
+});
+
+export const esquemaHistoricoApi = z.object({
+  total: z.int().nonnegative(),
+  eventos: z.array(
+    z.object({
+      id: identificador,
+      tipo: z.enum(TIPOS_EVENTO_HISTORICO),
+      origem: z.enum(ORIGENS_ALTERACAO),
+      autor: z.string().nullable(),
+      ocorridoEm: z.string(),
+      alteracoes: z.array(
+        z.object({
+          campo: z.enum(CAMPOS_HISTORICO),
+          antes: z.string().nullable(),
+          depois: z.string().nullable(),
+        }),
+      ),
+    }),
+  ),
 });
 
 export const esquemaIndiceApi = z.object({
