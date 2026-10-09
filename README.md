@@ -210,7 +210,7 @@ Essa montagem não faz parte do projeto e não foi validada nele. O exemplo é u
 
 **Links e tokens são segredos**
 
-- O endereço de um link e um token de API aparecem uma única vez, na criação; o banco guarda só o SHA-256. Quem tem o link entra sem senha.
+- O banco guarda só o SHA-256 de links e tokens. Um token de API aparece uma única vez, na criação. O endereço de um link pode ser copiado de novo em **Compartilhar board**, porque é derivado de uma chave guardada fora do banco (seção 8). Quem tem o link entra sem senha.
 - Envie só para quem deve acessar, prefira validade curta (1, 7, 30, 90 ou 365 dias) e revogue assim que não for mais necessário ou ao suspeitar de vazamento: a revogação vale na requisição seguinte.
 - O token do link fica no caminho da URL. Ele não vaza para outros sites (`Referrer-Policy: no-referrer`), mas fica no histórico do navegador de quem abriu e, no `npm run dev`, no terminal.
 
@@ -247,9 +247,15 @@ A tela **Integrações** mostra também a configuração com caminhos absolutos 
 
 ## 8. Compartilhamento por link
 
-**Link padrão de visualização (sem login).** Ao iniciar o servidor (`npm run dev` ou `npm run start`), o board garante um link ativo **somente leitura** do board inteiro (atividades ativas, sem arquivadas e sem expiração): se já existir um válido, ele é reaproveitado, sem gerar outro token. O endereço aparece no topo de **Compartilhar board**, com **Copiar**; **Gerar novo endereço** troca o token e o anterior para de funcionar na hora. Quem abre o link não precisa de login, mas não cria, edita, move nem arquiva nada: o servidor confere a cada página, ação, busca e download, e o banco recusa (CHECK) um link padrão que permita edição. Revogado pela lista, ele é criado de novo na próxima inicialização. O token é derivado (HMAC) de uma chave aleatória guardada no arquivo `chave-link-padrao`, ao lado do banco e fora dele; o banco continua guardando só o hash. Sem essa chave (arquivo apagado ou banco restaurado em outra máquina), o endereço antigo deixa de valer e um novo é gerado.
+**Link padrão de visualização (sem login).** Ao iniciar o servidor (`npm run dev` ou `npm run start`), o board garante um link ativo **somente leitura** do board inteiro (atividades ativas, sem arquivadas e sem expiração): se já existir um válido, ele é reaproveitado, sem gerar outro token. O endereço aparece no topo de **Compartilhar board**, com **Copiar**; **Gerar novo endereço** troca o token e o anterior para de funcionar na hora. Quem abre o link não precisa de login, mas não cria, edita, move nem arquiva nada: o servidor confere a cada página, ação, busca e download, e o banco recusa (CHECK) um link padrão que permita edição. Revogado pela lista, ele é criado de novo na próxima inicialização.
 
 O proprietário também gera links em **Compartilhar board**, no quadro. Cada link tem nome, modalidade, validade opcional e, no restrito, o escopo.
+
+- **Copiar de novo:** cada link da lista mostra o endereço com **Copiar**. O token de todos os links é derivado (HMAC) de uma chave aleatória guardada no arquivo `chave-link-padrao`, ao lado do banco e fora dele; o banco continua guardando só o hash.
+- **Links antigos ou chave trocada:** links criados antes desta versão, ou depois de a chave ser apagada ou o banco restaurado sem ela, continuam funcionando, mas o endereço não pode ser exibido. **Gerar endereço copiável** troca o endereço (o anterior para de funcionar na hora) e mantém nome, escopo e aparência própria.
+- **Editar:** **Editar link** troca nome, modalidade, escopo, arquivadas e validade ("Manter" deixa a validade como está). O endereço não muda; quem tem o link vê a nova configuração na próxima recarga.
+- **Revogar:** o link sai da lista e para de funcionar na hora. Para compartilhar de novo, gere outro link.
+- **Solicitante:** atividade criada por quem tem um link completo, sem solicitante informado, recebe o nome do link como solicitante (cadastrado se ainda não existir). O formulário já vem com esse nome preenchido.
 
 | Aspecto           | Board completo                                                                         | Restrito (somente leitura)                                               |
 | ----------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
@@ -330,7 +336,7 @@ O banco guarda só chaves do catálogo, cores `#rrggbb`, porcentagens e ângulos
 
 O backup copia o banco por meio da API de backup do próprio SQLite, que gera um retrato consistente e inclui o que ainda está no arquivo `-wal`. Junto vão os anexos ativos, conferidos pelo SHA-256 gravado no banco, e um `manifesto-backup.json` com o hash do banco e as contagens. A cópia do banco fica num arquivo único (sem `-wal` nem `-shm`).
 
-Ficam de fora a imagem de fundo (`DIRETORIO_ANEXOS\fundos`) e a chave do link padrão (`dados\chave-link-padrao`). Depois de restaurar sem elas, o board mostra o fundo padrão até uma imagem nova ser enviada, e a próxima inicialização gera outro endereço para o link padrão. Para manter os dois, copie também esses arquivos.
+Ficam de fora a imagem de fundo (`DIRETORIO_ANEXOS\fundos`) e a chave dos links (`dados\chave-link-padrao`). Depois de restaurar sem elas, o board mostra o fundo padrão até uma imagem nova ser enviada, a próxima inicialização gera outro endereço para o link padrão e os demais links continuam valendo, mas só voltam a ser copiáveis com **Gerar endereço copiável**. Para manter os dois, copie também esses arquivos.
 
 **Criar**
 
@@ -415,7 +421,7 @@ As migrações ficam em `servidor/banco/migracoes/` (0000 fundação, 0001 compa
 
 **Redefinição segura (recomeçar do zero).** Pare o servidor, faça `npm run backup:criar`, renomeie a pasta (`Rename-Item dados dados-antigo`), rode `npm run inicializar` e configure a conta e o solicitante padrão de novo. Os dados antigos ficam no backup e em `dados-antigo`.
 
-**Reset de fábrica (`npm run resetar-board`).** Apaga **sem backup** o banco (com `-wal` e `-shm`), a pasta de anexos (com as imagens de fundo) e a chave do link padrão, e em seguida faz o mesmo que `npm run inicializar`. Isso inclui a conta administrativa, os tokens da API (o MCP para de funcionar até um novo token ser gerado em Integrações) e os links de compartilhamento. A pasta `dados/backups` fica. O script lista o que será apagado e pede que se digite `RESETAR`; `npm run resetar-board -- --confirmar` pula a pergunta. Exige o servidor e o MCP parados: com o banco em uso nada é apagado. Para guardar os dados antes, rode `npm run backup:criar`.
+**Reset de fábrica (`npm run resetar-board`).** Apaga **sem backup** o banco (com `-wal` e `-shm`), a pasta de anexos (com as imagens de fundo) e a chave dos links, e em seguida faz o mesmo que `npm run inicializar`. Isso inclui a conta administrativa, os tokens da API (o MCP para de funcionar até um novo token ser gerado em Integrações) e os links de compartilhamento. A pasta `dados/backups` fica. O script lista o que será apagado e pede que se digite `RESETAR`; `npm run resetar-board -- --confirmar` pula a pergunta. Exige o servidor e o MCP parados: com o banco em uso nada é apagado. Para guardar os dados antes, rode `npm run backup:criar`.
 
 **Senha esquecida.** Esta versão não tem redefinição de senha: depois de criada a conta, `npm run admin:codigo` recusa emitir código novo. Guarde a senha num gerenciador de senhas. Recomeçar do zero (acima) cria outra conta, mas com um board novo.
 

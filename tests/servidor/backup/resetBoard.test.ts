@@ -18,7 +18,7 @@ function criarCenario(): Cenario {
     raiz,
     caminhoBanco: path.join(raiz, 'board.sqlite'),
     diretorioAnexos: path.join(raiz, 'anexos'),
-    caminhoChaveLinkPadrao: path.join(raiz, 'chave-link-padrao'),
+    caminhoChaveLinks: path.join(raiz, 'chave-link-padrao'),
     diretorioBackups: path.join(raiz, 'backups'),
   };
 }
@@ -31,7 +31,7 @@ function popular(cenario: Cenario): void {
     recursive: true,
   });
   fs.writeFileSync(path.join(cenario.diretorioAnexos, 'fundos', 'f.png'), 'x');
-  fs.writeFileSync(cenario.caminhoChaveLinkPadrao, 'chave');
+  fs.writeFileSync(cenario.caminhoChaveLinks, 'chave');
   fs.mkdirSync(cenario.diretorioBackups);
   fs.writeFileSync(path.join(cenario.diretorioBackups, 'manifesto.json'), '{}');
 }

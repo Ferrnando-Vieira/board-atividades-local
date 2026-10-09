@@ -34,7 +34,7 @@ export default function TelaQuadro({ acesso, aviso }: PropriedadesTelaQuadro) {
     );
   }
   const opcoesFormulario = acesso.permiteGestao
-    ? consultarOpcoesFormularioAtividade(banco)
+    ? consultarOpcoesFormularioAtividade(banco, acesso.solicitantePadrao)
     : null;
   const { superficies, amostrasFundo } = montarAparenciaPainel(
     banco,

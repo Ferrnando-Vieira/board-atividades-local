@@ -373,8 +373,11 @@ export function listarAtividadesArquivadas(
   };
 }
 
+// O solicitante do acesso (nome do link que cria a atividade) vale para
+// qualquer tag: o formulário deixa de seguir o padrão das tags.
 export function consultarOpcoesFormularioAtividade(
   executor: ExecutorBanco,
+  solicitanteDoAcesso: string | null = null,
 ): OpcoesFormularioAtividade | null {
   const board = buscarBoardPadrao(executor);
   if (!board) {
@@ -388,8 +391,13 @@ export function consultarOpcoesFormularioAtividade(
     })),
     solicitantes: listarSolicitantesSugeridos(executor, board.id),
     solicitantePadrao:
-      buscarSolicitantePadrao(executor, board.id)?.nome ?? null,
-    solicitantesPadraoTags: mapearSolicitantesPadraoTags(executor, board.id),
+      solicitanteDoAcesso ??
+      buscarSolicitantePadrao(executor, board.id)?.nome ??
+      null,
+    solicitantesPadraoTags:
+      solicitanteDoAcesso === null
+        ? mapearSolicitantesPadraoTags(executor, board.id)
+        : {},
     tags: listarNomesTags(executor, board.id),
     fusoHorario: board.fusoHorario,
   };

@@ -7,9 +7,12 @@ import {
 } from '@/servidor/banco/esquema';
 import { validarTokenCompartilhamento } from '@/servidor/compartilhamento/acessoCompartilhamento';
 import {
+  consultarTokensLinks,
   definirAnimalLink,
+  editarLinkCompartilhamento,
   listarLinksCompartilhamento,
   revogarLinkCompartilhamento,
+  tornarEnderecoCopiavel,
 } from '@/servidor/compartilhamento/linksServico';
 import { garantirLinkPadrao } from '@/servidor/compartilhamento/linkPadrao';
 import { excluirTag } from '@/servidor/classificacao/tagsServico';
@@ -20,6 +23,7 @@ import {
 } from '@/tests/suporte/bancoTeste';
 import { AGORA_TESTE, exigirBoardId } from '@/tests/suporte/fabricasAtividades';
 import {
+  CHAVE_LINKS_TESTE,
   criarCenarioEscopo,
   criarLinkDeTeste,
   exigirIdSolicitante,
@@ -144,7 +148,7 @@ describe('links de compartilhamento', () => {
       expect(Object.keys(link ?? {})).not.toContain('hashToken');
     });
 
-    it('deve mostrar ativos antes de expirados e revogados', () => {
+    it('deve mostrar ativos antes de expirados e esconder os revogados', () => {
       const expirado = criarLinkDeTeste(
         banco,
         { nome: 'Expirado', modalidade: 'completo', validadeDias: 1 },
@@ -166,9 +170,137 @@ describe('links de compartilhamento', () => {
       expect(situacoes).toEqual([
         ['Ativo', 'ativo'],
         ['Expirado', 'expirado'],
-        ['Revogado', 'revogado'],
       ]);
       expect(expirado.expiraEm).not.toBeNull();
+    });
+  });
+
+  describe('endereço copiável', () => {
+    it('deve reconstruir o endereço dos links ativos a partir da chave', () => {
+      const link = criarLinkDeTeste(banco, { modalidade: 'completo' });
+      const revogado = criarLinkDeTeste(banco, { modalidade: 'completo' });
+      revogarLinkCompartilhamento(banco, { linkId: revogado.linkId });
+
+      const tokens = consultarTokensLinks(
+        banco,
+        exigirBoardId(banco),
+        CHAVE_LINKS_TESTE,
+      );
+
+      expect([...tokens]).toEqual([[link.linkId, link.token]]);
+      expect(validarTokenCompartilhamento(banco, link.token)).not.toBeNull();
+    });
+
+    it('não deve reconstruir com outra chave', () => {
+      criarLinkDeTeste(banco, { modalidade: 'completo' });
+
+      expect(
+        consultarTokensLinks(banco, exigirBoardId(banco), Buffer.alloc(32, 1))
+          .size,
+      ).toBe(0);
+    });
+
+    it('deve trocar o endereço de um link antigo pelo derivado, invalidando o anterior', () => {
+      const link = criarLinkDeTeste(banco, { modalidade: 'completo' });
+      const tokenAntigo = 'A'.repeat(43);
+      banco
+        .update(linksCompartilhamento)
+        .set({ hashToken: calcularHashToken(tokenAntigo) })
+        .where(eq(linksCompartilhamento.id, link.linkId))
+        .run();
+
+      const novo = tornarEnderecoCopiavel(
+        banco,
+        { linkId: link.linkId },
+        CHAVE_LINKS_TESTE,
+      );
+
+      expect(novo).toBe(link.token);
+      expect(validarTokenCompartilhamento(banco, tokenAntigo)).toBeNull();
+      expect(validarTokenCompartilhamento(banco, novo)).not.toBeNull();
+    });
+  });
+
+  describe('editarLinkCompartilhamento', () => {
+    it('deve trocar nome, modalidade, escopo e validade mantendo o endereço', () => {
+      const diretoria = exigirIdTag(banco, 'Diretoria');
+      const link = criarLinkDeTeste(banco, { modalidade: 'completo' });
+
+      editarLinkCompartilhamento(
+        banco,
+        {
+          linkId: link.linkId,
+          nome: 'Diretoria',
+          modalidade: 'restrito',
+          tagIds: [diretoria],
+          solicitanteIds: [],
+          incluirArquivadas: false,
+          validadeDias: DIAS_VALIDADE,
+        },
+        AGORA_TESTE,
+      );
+
+      const [editado] = listarLinksCompartilhamento(
+        banco,
+        exigirBoardId(banco),
+        AGORA_TESTE,
+      );
+      expect(editado).toEqual(
+        expect.objectContaining({
+          nome: 'Diretoria',
+          modalidade: 'restrito',
+          tags: [{ id: diretoria, nome: 'Diretoria' }],
+          expiraEm: new Date(
+            AGORA_TESTE.getTime() + DIAS_VALIDADE * MILISSEGUNDOS_POR_DIA,
+          ).toISOString(),
+        }),
+      );
+      expect(
+        validarTokenCompartilhamento(banco, link.token, AGORA_TESTE),
+      ).toEqual(
+        expect.objectContaining({ nome: 'Diretoria', modalidade: 'restrito' }),
+      );
+    });
+
+    it('deve manter a validade quando ela não é enviada', () => {
+      const link = criarLinkDeTeste(banco, {
+        modalidade: 'completo',
+        validadeDias: DIAS_VALIDADE,
+      });
+
+      editarLinkCompartilhamento(banco, {
+        linkId: link.linkId,
+        nome: 'Renomeado',
+        modalidade: 'completo',
+        tagIds: [],
+        solicitanteIds: [],
+        incluirArquivadas: true,
+        validadeDias: undefined,
+      });
+
+      expect(
+        listarLinksCompartilhamento(banco, exigirBoardId(banco))[0]?.expiraEm,
+      ).toBe(link.expiraEm);
+    });
+
+    it('deve recusar link revogado e o link padrão', () => {
+      const link = criarLinkDeTeste(banco, { modalidade: 'completo' });
+      revogarLinkCompartilhamento(banco, { linkId: link.linkId });
+      const padrao = garantirLinkPadrao(banco, CHAVE_LINKS_TESTE);
+      const edicao = {
+        nome: 'X',
+        modalidade: 'completo' as const,
+        tagIds: [],
+        solicitanteIds: [],
+        incluirArquivadas: true,
+        validadeDias: undefined,
+      };
+
+      for (const linkId of [link.linkId, padrao.linkId]) {
+        expect(() =>
+          editarLinkCompartilhamento(banco, { ...edicao, linkId }),
+        ).toThrow(expect.objectContaining({ codigo: 'link-inexistente' }));
+      }
     });
   });
 

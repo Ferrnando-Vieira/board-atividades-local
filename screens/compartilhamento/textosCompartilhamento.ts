@@ -1,5 +1,5 @@
 import type { ModalidadeCompartilhamento } from '@/config/constantes';
-import type { SituacaoCredencial } from '@/servidor/seguranca/tokens';
+import type { SituacaoValidade } from '@/servidor/seguranca/tokens';
 
 export const textosCompartilhamento = {
   botaoAbrir: 'Compartilhar board',
@@ -53,12 +53,24 @@ export const textosCompartilhamento = {
   avisoSelecionado:
     'O link está selecionado: copie com Ctrl+C (no celular, toque e segure).',
   tituloLista: 'Links criados',
+  rotuloEnderecoLink: 'Endereço do link',
+  editarLink: 'Editar link',
+  botaoSalvarLink: 'Salvar alterações',
+  botaoSalvandoLink: 'Salvando…',
+  manterValidade: (expiraEm: string | null) =>
+    expiraEm ? `Manter (expira em ${expiraEm})` : 'Manter (não expira)',
+  enderecoIndisponivel:
+    'Este link foi criado antes de os endereços poderem ser copiados de novo (ou a chave dos links foi trocada): o endereço atual não pode ser exibido.',
+  botaoEnderecoCopiavel: 'Gerar endereço copiável',
+  gerandoEnderecoCopiavel: 'Gerando…',
+  tituloEnderecoCopiavel: 'Gerar um endereço copiável?',
+  descricaoEnderecoCopiavel:
+    'O link continua com o mesmo nome e a mesma configuração, mas o endereço atual para de funcionar na mesma hora; envie o novo a quem usa o link.',
   listaVazia: 'Nenhum link criado ainda.',
   situacoes: {
     ativo: 'Ativo',
     expirado: 'Expirado',
-    revogado: 'Revogado',
-  } satisfies Record<SituacaoCredencial, string>,
+  } satisfies Record<SituacaoValidade, string>,
   boardInteiro: 'Board inteiro',
   arquivadasIncluidas: 'com arquivadas',
   arquivadasExcluidas: 'sem arquivadas',
@@ -68,7 +80,7 @@ export const textosCompartilhamento = {
   botaoRevogando: 'Revogando…',
   botaoCancelar: 'Cancelar',
   descricaoRevogacao:
-    'Quem tiver o endereço perde o acesso na próxima recarga ou ação. Não dá para desfazer: para compartilhar de novo, gere outro link.',
+    'Quem tiver o endereço perde o acesso na próxima recarga ou ação, e o link sai da lista. Não dá para desfazer: para compartilhar de novo, gere outro link.',
   tituloRevogacao: (nome: string) => `Revogar o link "${nome}"?`,
   descreverTags: (nomes: readonly string[]) => `Tags: ${nomes.join(', ')}`,
   descreverSolicitantes: (nomes: readonly string[]) =>
@@ -76,7 +88,6 @@ export const textosCompartilhamento = {
   descreverCriacao: (momento: string) => `Criado em ${momento}`,
   descreverExpiracao: (momento: string) => `expira em ${momento}`,
   descreverUltimoAcesso: (momento: string) => `último acesso em ${momento}`,
-  descreverRevogacao: (momento: string) => `revogado em ${momento}`,
   descreverOpcao: (nome: string, quantidade: number) =>
     `${nome} (${quantidade})`,
   indisponivelTitulo: 'Link indisponível',

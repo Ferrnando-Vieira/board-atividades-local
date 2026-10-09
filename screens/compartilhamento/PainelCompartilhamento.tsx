@@ -71,7 +71,12 @@ export default function PainelCompartilhamento({
           ) : (
             <ul className="flex flex-col divide-y divide-borda">
               {links.map((link) => (
-                <ItemLink key={link.id} link={link} />
+                <ItemLink
+                  key={link.id}
+                  link={link}
+                  tags={tags}
+                  solicitantes={solicitantes}
+                />
               ))}
             </ul>
           )}

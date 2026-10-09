@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import {
   esquemaAnimalLink,
+  esquemaEdicaoLink,
   esquemaNovoLink,
+  VALOR_MANTER_VALIDADE,
 } from '@/servidor/compartilhamento/esquemasCompartilhamento';
 import { mensagensCompartilhamento } from '@/servidor/compartilhamento/mensagensCompartilhamento';
 
@@ -103,5 +105,44 @@ describe('animal do link', () => {
     expect(
       esquemaAnimalLink.safeParse({ linkId: '4', animal: 'unicornio' }).success,
     ).toBe(false);
+  });
+});
+
+describe('esquemaEdicaoLink', () => {
+  it('deve manter a validade com "manter" e removê-la com vazio', () => {
+    const manter = esquemaEdicaoLink.parse({
+      ...BASE_RESTRITO,
+      linkId: '4',
+      validadeDias: VALOR_MANTER_VALIDADE,
+    });
+    const remover = esquemaEdicaoLink.parse({
+      ...BASE_RESTRITO,
+      linkId: '4',
+    });
+
+    expect(manter).toEqual(
+      expect.objectContaining({ linkId: 4, validadeDias: undefined }),
+    );
+    expect(remover.validadeDias).toBeNull();
+  });
+
+  it('deve aplicar as mesmas regras de escopo da criação', () => {
+    const semEscopo = esquemaEdicaoLink.safeParse({
+      ...BASE_RESTRITO,
+      linkId: '4',
+      tagIds: [],
+      validadeDias: VALOR_MANTER_VALIDADE,
+    });
+    const completo = esquemaEdicaoLink.parse({
+      ...BASE_RESTRITO,
+      linkId: '4',
+      modalidade: 'completo',
+      validadeDias: VALOR_MANTER_VALIDADE,
+    });
+
+    expect(semEscopo.success).toBe(false);
+    expect(completo).toEqual(
+      expect.objectContaining({ tagIds: [], incluirArquivadas: true }),
+    );
   });
 });

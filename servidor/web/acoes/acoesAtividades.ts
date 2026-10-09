@@ -144,7 +144,10 @@ async function executarCriacao(
   try {
     criarAtividade(
       obterBancoAplicacao(),
-      validacao.data,
+      {
+        ...validacao.data,
+        solicitante: validacao.data.solicitante ?? acesso.solicitantePadrao,
+      },
       new Date(),
       montarOrigemAlteracao(acesso),
       await lerArquivosPendentes(dados, validacao.data.descricao),

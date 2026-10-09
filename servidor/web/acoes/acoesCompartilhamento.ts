@@ -6,21 +6,27 @@ import { montarUrlCompartilhamento } from '@/config/rotas';
 import {
   CAMPOS_ANIMAL_LINK,
   CAMPOS_LISTA_NOVO_LINK,
+  CAMPOS_TEXTO_EDICAO_LINK,
   CAMPOS_TEXTO_NOVO_LINK,
   esquemaAnimalLink,
+  esquemaEdicaoLink,
   esquemaNovoLink,
-  esquemaRevogacaoLink,
+  esquemaReferenciaLink,
 } from '@/servidor/compartilhamento/esquemasCompartilhamento';
 import {
+  obterOuCriarChaveLinks,
+  resolverCaminhoChaveLinks,
+} from '@/servidor/compartilhamento/chaveLinks';
+import {
   garantirLinkPadrao,
-  obterOuCriarChaveLinkPadrao,
   renovarLinkPadrao,
-  resolverCaminhoChaveLinkPadrao,
 } from '@/servidor/compartilhamento/linkPadrao';
 import {
   criarLinkCompartilhamento,
   definirAnimalLink,
+  editarLinkCompartilhamento,
   revogarLinkCompartilhamento,
+  tornarEnderecoCopiavel,
   type LinkCriado,
 } from '@/servidor/compartilhamento/linksServico';
 import { mensagensCompartilhamento as mensagens } from '@/servidor/compartilhamento/mensagensCompartilhamento';
@@ -38,7 +44,13 @@ import type {
 } from '@/types/formulario';
 import { lerValoresFormulario } from '@/util/FormularioUtils';
 
-const CAMPOS_REVOGACAO_LINK = [CAMPOS_COMPARTILHAMENTO.LINK_ID] as const;
+const CAMPOS_REFERENCIA_LINK = [CAMPOS_COMPARTILHAMENTO.LINK_ID] as const;
+
+function obterChaveParaGravacao(): Buffer {
+  return obterOuCriarChaveLinks(
+    resolverCaminhoChaveLinks(obterAmbiente().caminhoBancoSqlite),
+  );
+}
 
 // Administrar links é exclusivo da sessão administrativa: estas ações não
 // aceitam credencial de link, nem mesmo de link completo.
@@ -63,7 +75,11 @@ export async function criarLinkCompartilhamentoFormulario(
   }
   let criado: LinkCriado;
   try {
-    criado = criarLinkCompartilhamento(obterBancoAplicacao(), validacao.data);
+    criado = criarLinkCompartilhamento(
+      obterBancoAplicacao(),
+      validacao.data,
+      obterChaveParaGravacao(),
+    );
   } catch (erro) {
     return estadoDeFalhaNegocio(estado, valores, erro);
   }
@@ -82,8 +98,8 @@ export async function revogarLinkCompartilhamentoFormulario(
   dados: FormData,
 ): Promise<EstadoFormularioGestao> {
   await exigirSessaoAdministrativa();
-  const valores = lerValoresFormulario(dados, CAMPOS_REVOGACAO_LINK);
-  const validacao = esquemaRevogacaoLink.safeParse(valores);
+  const valores = lerValoresFormulario(dados, CAMPOS_REFERENCIA_LINK);
+  const validacao = esquemaReferenciaLink.safeParse(valores);
   if (!validacao.success) {
     return estadoDeFalhaValidacao(
       estado,
@@ -125,10 +141,60 @@ export async function definirAnimalLinkFormulario(
   return estadoDeSucesso(estado, mensagens.animalDefinido);
 }
 
-function obterChaveParaGravacao(): Buffer {
-  return obterOuCriarChaveLinkPadrao(
-    resolverCaminhoChaveLinkPadrao(obterAmbiente().caminhoBancoSqlite),
+export async function editarLinkCompartilhamentoFormulario(
+  estado: EstadoFormularioGestao,
+  dados: FormData,
+): Promise<EstadoFormularioGestao> {
+  await exigirSessaoAdministrativa();
+  const valores = lerValoresFormulario(
+    dados,
+    CAMPOS_TEXTO_EDICAO_LINK,
+    CAMPOS_LISTA_NOVO_LINK,
   );
+  const validacao = esquemaEdicaoLink.safeParse(valores);
+  if (!validacao.success) {
+    return estadoDeFalhaValidacao(
+      estado,
+      valores,
+      validacao.error,
+      mensagens.corrijaCampos,
+    );
+  }
+  try {
+    editarLinkCompartilhamento(obterBancoAplicacao(), validacao.data);
+  } catch (erro) {
+    return estadoDeFalhaNegocio(estado, valores, erro);
+  }
+  revalidarPainel();
+  return estadoDeSucesso(estado, mensagens.linkEditado);
+}
+
+export async function tornarEnderecoCopiavelFormulario(
+  estado: EstadoFormularioGestao,
+  dados: FormData,
+): Promise<EstadoFormularioGestao> {
+  await exigirSessaoAdministrativa();
+  const valores = lerValoresFormulario(dados, CAMPOS_REFERENCIA_LINK);
+  const validacao = esquemaReferenciaLink.safeParse(valores);
+  if (!validacao.success) {
+    return estadoDeFalhaValidacao(
+      estado,
+      valores,
+      validacao.error,
+      mensagens.dadosInvalidos,
+    );
+  }
+  try {
+    tornarEnderecoCopiavel(
+      obterBancoAplicacao(),
+      validacao.data,
+      obterChaveParaGravacao(),
+    );
+  } catch (erro) {
+    return estadoDeFalhaNegocio(estado, valores, erro);
+  }
+  revalidarPainel();
+  return estadoDeSucesso(estado, mensagens.enderecoCopiavelGerado);
 }
 
 // O link padrão também é administração de links: só a sessão do proprietário

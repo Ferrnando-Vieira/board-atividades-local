@@ -22,6 +22,17 @@ export const SITUACOES_CREDENCIAL = ['ativo', 'expirado', 'revogado'] as const;
 
 export type SituacaoCredencial = (typeof SITUACOES_CREDENCIAL)[number];
 
+export type SituacaoValidade = Exclude<SituacaoCredencial, 'revogado'>;
+
+export function determinarSituacaoValidade(
+  expiraEm: string | null,
+  agora: Date,
+): SituacaoValidade {
+  return expiraEm !== null && expiraEm <= agora.toISOString()
+    ? 'expirado'
+    : 'ativo';
+}
+
 // Revogação prevalece sobre expiração: um link revogado depois de vencer
 // continua aparecendo como revogado.
 export function determinarSituacaoCredencial(
@@ -29,12 +40,9 @@ export function determinarSituacaoCredencial(
   expiraEm: string | null,
   agora: Date,
 ): SituacaoCredencial {
-  if (revogadoEm !== null) {
-    return 'revogado';
-  }
-  return expiraEm !== null && expiraEm <= agora.toISOString()
-    ? 'expirado'
-    : 'ativo';
+  return revogadoEm === null
+    ? determinarSituacaoValidade(expiraEm, agora)
+    : 'revogado';
 }
 
 // Tokens têm 256 bits de entropia, então SHA-256 sem sal basta: não há

@@ -446,6 +446,39 @@ describe('ações com link de compartilhamento', () => {
       expect(contarLinhas(banco, 'atividades')).toBe(7);
     });
 
+    function lerSolicitanteDaAtividade(titulo: string): string | undefined {
+      const linha = banco.$client
+        .prepare(
+          'SELECT s.nome AS nome FROM atividades a JOIN solicitantes s ON s.id = a.solicitante_id WHERE a.titulo = ?',
+        )
+        .get(titulo) as { nome: string } | undefined;
+      return linha?.nome;
+    }
+
+    it('deve gravar o nome do link como solicitante quando ele não é informado', async () => {
+      await expect(
+        exigirTentativa(token, 'criarAtividadeFormulario')(),
+      ).rejects.toThrow('NEXT_REDIRECT');
+
+      expect(lerSolicitanteDaAtividade('Invasora')).toBe('Link de teste');
+    });
+
+    it('deve manter o solicitante informado no formulário', async () => {
+      await expect(
+        criarAtividadeFormulario(
+          ESTADO_FORMULARIO_GESTAO_INICIAL,
+          montarFormulario({
+            [CAMPO_CREDENCIAL]: token,
+            titulo: 'Com solicitante',
+            statusId: String(aFazerId),
+            solicitante: 'Financeiro',
+          }),
+        ),
+      ).rejects.toThrow('NEXT_REDIRECT');
+
+      expect(lerSolicitanteDaAtividade('Com solicitante')).toBe('Financeiro');
+    });
+
     it('deve editar e voltar ao detalhe dentro do link', async () => {
       await expect(
         exigirTentativa(token, 'editarAtividadeFormulario')(),

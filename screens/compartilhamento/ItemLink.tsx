@@ -1,16 +1,22 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useId, useState } from 'react';
 import IconeAnimal from '@/components/animais/IconeAnimal';
 import SeletorAnimal from '@/components/animais/SeletorAnimal';
 import Botao from '@/components/ui/Botao';
+import CampoCopiavel from '@/components/ui/CampoCopiavel';
 import DialogoConfirmacao from '@/components/ui/DialogoConfirmacao';
 import MensagemAlerta from '@/components/ui/MensagemAlerta';
 import { obterAnimal } from '@/config/animais';
 import { CAMPOS_COMPARTILHAMENTO } from '@/config/camposFormulario';
+import FormularioEdicaoLink from '@/screens/compartilhamento/FormularioEdicaoLink';
+import FormularioEnderecoCopiavel from '@/screens/compartilhamento/FormularioEnderecoCopiavel';
 import { textosCompartilhamento as textos } from '@/screens/compartilhamento/textosCompartilhamento';
-import type { LinkExibido } from '@/screens/compartilhamento/tiposCompartilhamento';
-import type { SituacaoCredencial } from '@/servidor/seguranca/tokens';
+import type {
+  LinkExibido,
+  OpcaoEscopo,
+} from '@/screens/compartilhamento/tiposCompartilhamento';
+import type { SituacaoValidade } from '@/servidor/seguranca/tokens';
 import {
   definirAnimalLinkFormulario,
   revogarLinkCompartilhamentoFormulario,
@@ -18,11 +24,14 @@ import {
 import { ESTADO_FORMULARIO_GESTAO_INICIAL } from '@/types/formulario';
 import { combinarClasses } from '@/util/ClassesUtils';
 
-const CLASSES_SITUACAO: Record<SituacaoCredencial, string> = {
+const CLASSES_SITUACAO: Record<SituacaoValidade, string> = {
   ativo: 'bg-sucesso-fundo text-sucesso',
   expirado: 'bg-aviso-fundo text-aviso',
-  revogado: 'bg-erro-fundo text-erro',
 };
+
+function listarNomes(itens: readonly { nome: string }[]): string[] {
+  return itens.map((item) => item.nome);
+}
 
 function descreverEscopo(link: LinkExibido): string {
   if (link.padrao) {
@@ -32,9 +41,9 @@ function descreverEscopo(link: LinkExibido): string {
     return textos.boardInteiro;
   }
   const partes = [
-    link.tags.length > 0 ? textos.descreverTags(link.tags) : null,
+    link.tags.length > 0 ? textos.descreverTags(listarNomes(link.tags)) : null,
     link.solicitantes.length > 0
-      ? textos.descreverSolicitantes(link.solicitantes)
+      ? textos.descreverSolicitantes(listarNomes(link.solicitantes))
       : null,
     link.incluirArquivadas
       ? textos.arquivadasIncluidas
@@ -52,17 +61,16 @@ function descreverDatas(link: LinkExibido): string {
     link.ultimoAcessoEm
       ? textos.descreverUltimoAcesso(link.ultimoAcessoEm)
       : textos.nuncaAcessado,
-    link.revogadoEm ? textos.descreverRevogacao(link.revogadoEm) : null,
   ];
-  return partes.filter((parte) => parte !== null).join(' · ');
+  return partes.join(' · ');
 }
 
-type PropriedadesItemLink = {
+type PropriedadesAnimalDoLink = {
   link: LinkExibido;
 };
 
 // Só links nomeados e ativos: o padrão é o acesso anônimo e segue sorteando.
-function AnimalDoLink({ link }: PropriedadesItemLink) {
+function AnimalDoLink({ link }: PropriedadesAnimalDoLink) {
   const [estado, acao, salvando] = useActionState(
     definirAnimalLinkFormulario,
     ESTADO_FORMULARIO_GESTAO_INICIAL,
@@ -124,7 +132,18 @@ function AnimalDoLink({ link }: PropriedadesItemLink) {
   );
 }
 
-export default function ItemLink({ link }: PropriedadesItemLink) {
+type PropriedadesItemLink = {
+  link: LinkExibido;
+  tags: readonly OpcaoEscopo[];
+  solicitantes: readonly OpcaoEscopo[];
+};
+
+export default function ItemLink({
+  link,
+  tags,
+  solicitantes,
+}: PropriedadesItemLink) {
+  const idEndereco = useId();
   const [estado, acao, revogando] = useActionState(
     revogarLinkCompartilhamentoFormulario,
     ESTADO_FORMULARIO_GESTAO_INICIAL,
@@ -164,36 +183,59 @@ export default function ItemLink({ link }: PropriedadesItemLink) {
         {descreverEscopo(link)}
       </p>
       <p className="text-xs text-texto-suave">{descreverDatas(link)}</p>
+      {link.url && (
+        <CampoCopiavel
+          id={idEndereco}
+          rotulo={textos.rotuloEnderecoLink}
+          valor={link.url}
+          rotuloCopiar={textos.botaoCopiar}
+          avisoCopiado={textos.avisoCopiado}
+          avisoSelecionado={textos.avisoSelecionado}
+        />
+      )}
+      {!link.padrao && !link.url && (
+        <FormularioEnderecoCopiavel linkId={link.id} />
+      )}
+      {!link.padrao && (
+        <details className="rounded-lg border border-borda">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center rounded-lg px-2 text-xs font-medium text-primaria hover:bg-fundo focus-visible:outline-2 focus-visible:outline-primaria [&::-webkit-details-marker]:hidden">
+            {textos.editarLink}
+          </summary>
+          <FormularioEdicaoLink
+            link={link}
+            tags={tags}
+            solicitantes={solicitantes}
+          />
+        </details>
+      )}
       {!link.padrao && link.situacao === 'ativo' && (
         <AnimalDoLink link={link} />
       )}
-      {link.situacao !== 'revogado' && (
-        <form action={acao}>
-          <input
-            type="hidden"
-            name={CAMPOS_COMPARTILHAMENTO.LINK_ID}
-            value={link.id}
-          />
-          <Botao
-            variante="perigo"
-            onClick={() => setDialogoAbertoNaTentativa(estado.tentativa)}
-            disabled={revogando}
-          >
-            {textos.botaoRevogar}
-          </Botao>
-          <DialogoConfirmacao
-            aberto={dialogoAbertoNaTentativa === estado.tentativa}
-            titulo={textos.tituloRevogacao(link.nome)}
-            rotuloConfirmar={textos.botaoRevogar}
-            rotuloConfirmando={textos.botaoRevogando}
-            rotuloCancelar={textos.botaoCancelar}
-            pendente={revogando}
-            aoCancelar={() => setDialogoAbertoNaTentativa(null)}
-          >
-            <p>{textos.descricaoRevogacao}</p>
-          </DialogoConfirmacao>
-        </form>
-      )}
+      <form action={acao}>
+        <input
+          type="hidden"
+          name={CAMPOS_COMPARTILHAMENTO.LINK_ID}
+          value={link.id}
+        />
+        <Botao
+          variante="perigo"
+          onClick={() => setDialogoAbertoNaTentativa(estado.tentativa)}
+          disabled={revogando}
+        >
+          {textos.botaoRevogar}
+        </Botao>
+        <DialogoConfirmacao
+          aberto={dialogoAbertoNaTentativa === estado.tentativa}
+          titulo={textos.tituloRevogacao(link.nome)}
+          rotuloConfirmar={textos.botaoRevogar}
+          rotuloConfirmando={textos.botaoRevogando}
+          rotuloCancelar={textos.botaoCancelar}
+          pendente={revogando}
+          aoCancelar={() => setDialogoAbertoNaTentativa(null)}
+        >
+          <p>{textos.descricaoRevogacao}</p>
+        </DialogoConfirmacao>
+      </form>
       {estado.mensagemErro && (
         <MensagemAlerta tipo="erro">{estado.mensagemErro}</MensagemAlerta>
       )}

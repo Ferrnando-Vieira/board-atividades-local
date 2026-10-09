@@ -54,6 +54,9 @@ export type AcessoPainel = {
   // padrão (público) só exibe a do board.
   escopoAparencia: EscopoAparencia;
   permiteAparencia: boolean;
+  // Solicitante gravado nas atividades criadas por este acesso sem
+  // solicitante informado: o nome do link nomeado; nulo segue a regra do board.
+  solicitantePadrao: string | null;
 };
 
 export function criarAcessoAdministrativo(usuario: string): AcessoPainel {
@@ -71,6 +74,7 @@ export function criarAcessoAdministrativo(usuario: string): AcessoPainel {
     animalPresenca: null,
     escopoAparencia: ESCOPO_BOARD,
     permiteAparencia: true,
+    solicitantePadrao: null,
   };
 }
 
@@ -92,6 +96,7 @@ export function criarAcessoCompartilhado(
     animalPresenca: link.animal,
     escopoAparencia: link.padrao ? ESCOPO_BOARD : escopoDoLink(link.linkId),
     permiteAparencia: !link.padrao,
+    solicitantePadrao: link.padrao ? null : link.nome,
   };
 }
 

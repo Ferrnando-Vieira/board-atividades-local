@@ -20,7 +20,11 @@ export const mensagensCompartilhamento = {
     'Os dados enviados são inválidos. Recarregue a página e tente novamente.',
   corrijaCampos: 'Corrija os campos destacados.',
   linkCriado:
-    'Link gerado. Copie-o agora: por segurança, o endereço completo não será exibido de novo.',
+    'Link gerado. O endereço também fica disponível na lista de links, para copiar quando precisar.',
+  linkEditado:
+    'Link atualizado. Quem tem o endereço passa a ver a nova configuração na próxima recarga.',
+  enderecoCopiavelGerado:
+    'Novo endereço gerado. O anterior deixou de funcionar; copie o novo na lista.',
   linkRevogado:
     'Link revogado. Quem tinha o endereço perdeu o acesso imediatamente.',
   animalDefinido:

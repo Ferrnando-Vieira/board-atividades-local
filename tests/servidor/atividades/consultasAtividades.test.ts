@@ -187,6 +187,20 @@ describe('consultas de leitura', () => {
   });
 
   describe('consultarOpcoesFormularioAtividade', () => {
+    it('deve usar o solicitante do acesso no lugar dos padrões do board e das tags', () => {
+      const opcoes = consultarOpcoesFormularioAtividade(banco, 'Equipe Fiscal');
+
+      expect(opcoes).toEqual(
+        expect.objectContaining({
+          solicitantePadrao: 'Equipe Fiscal',
+          solicitantesPadraoTags: {},
+        }),
+      );
+      expect(consultarOpcoesFormularioAtividade(banco)?.solicitantePadrao).toBe(
+        SOLICITANTE_PADRAO_TESTE,
+      );
+    });
+
     it('deve sugerir só solicitantes em uso e sempre o padrão', () => {
       const { atividadeId } = criarAtividade(
         banco,

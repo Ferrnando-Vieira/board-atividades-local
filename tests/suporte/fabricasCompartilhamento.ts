@@ -63,6 +63,8 @@ export function exigirIdSolicitante(banco: BancoDados, nome: string): number {
   return exigirId(banco, solicitantes, nome);
 }
 
+export const CHAVE_LINKS_TESTE = Buffer.alloc(32, 7);
+
 export function criarLinkDeTeste(
   banco: BancoDados,
   sobrescritas: Partial<DadosNovoLink> = {},
@@ -80,6 +82,7 @@ export function criarLinkDeTeste(
       animal: null,
       ...sobrescritas,
     },
+    CHAVE_LINKS_TESTE,
     agora,
   );
 }

@@ -19,7 +19,10 @@ export default function TelaNovaAtividade({
   acesso,
   statusSugeridoId,
 }: PropriedadesTelaNovaAtividade) {
-  const opcoes = consultarOpcoesFormularioAtividade(obterBancoAplicacao());
+  const opcoes = consultarOpcoesFormularioAtividade(
+    obterBancoAplicacao(),
+    acesso.solicitantePadrao,
+  );
   const statusInicial =
     opcoes?.status.find((status) => status.id === statusSugeridoId) ??
     opcoes?.status[0];

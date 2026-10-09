@@ -4,10 +4,10 @@ import { obterUrlBaseLan, type Ambiente } from '@/config/ambiente';
 import { ehEnderecoSomenteLocal } from '@/config/rede';
 import { fecharBanco, type BancoDados } from '@/servidor/banco/conexao';
 import {
-  garantirLinkPadrao,
-  obterOuCriarChaveLinkPadrao,
-  resolverCaminhoChaveLinkPadrao,
-} from '@/servidor/compartilhamento/linkPadrao';
+  obterOuCriarChaveLinks,
+  resolverCaminhoChaveLinks,
+} from '@/servidor/compartilhamento/chaveLinks';
+import { garantirLinkPadrao } from '@/servidor/compartilhamento/linkPadrao';
 import { exibirToastWindows } from '@/servidor/lembretes/toastWindows';
 import { iniciarVigiaLembretes } from '@/servidor/lembretes/vigiaLembretes';
 import {
@@ -81,8 +81,8 @@ function prepararLinkPadrao(ambiente: Ambiente): void {
     banco = abrirBancoInicializado(ambiente);
     const link = garantirLinkPadrao(
       banco,
-      obterOuCriarChaveLinkPadrao(
-        resolverCaminhoChaveLinkPadrao(ambiente.caminhoBancoSqlite),
+      obterOuCriarChaveLinks(
+        resolverCaminhoChaveLinks(ambiente.caminhoBancoSqlite),
       ),
     );
     console.log(

@@ -14,7 +14,7 @@ export const MENSAGEM_BANCO_EM_USO_RESET =
 export type OpcoesResetBoard = {
   caminhoBanco: string;
   diretorioAnexos: string;
-  caminhoChaveLinkPadrao: string;
+  caminhoChaveLinks: string;
   agora?: Date;
 };
 
@@ -26,7 +26,7 @@ export function listarAlvosReset(opcoes: OpcoesResetBoard): string[] {
       (sufixo) => `${opcoes.caminhoBanco}${sufixo}`,
     ),
     opcoes.diretorioAnexos,
-    opcoes.caminhoChaveLinkPadrao,
+    opcoes.caminhoChaveLinks,
   ];
 }
 
@@ -46,7 +46,7 @@ function desfazer(movimentos: readonly Movimento[]): void {
 }
 
 // Volta o board ao estado de fábrica: banco, anexos (com as imagens de fundo)
-// e a chave do link padrão. Primeiro tudo é renomeado ao lado do original; no
+// e a chave dos links de compartilhamento. Primeiro tudo é renomeado ao lado do original; no
 // Windows o banco aberto pelo servidor não pode ser renomeado, então com o
 // servidor no ar o que já andou volta e nada é apagado. Só depois os itens
 // renomeados são removidos. Devolve os caminhos que existiam e foram apagados.

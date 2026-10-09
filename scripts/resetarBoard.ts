@@ -3,7 +3,7 @@ import {
   apagarDadosBoard,
   listarAlvosReset,
 } from '@/servidor/backup/resetBoard';
-import { resolverCaminhoChaveLinkPadrao } from '@/servidor/compartilhamento/linkPadrao';
+import { resolverCaminhoChaveLinks } from '@/servidor/compartilhamento/chaveLinks';
 import { inicializarBanco } from './suporte/inicializacaoBanco';
 import { carregarAmbiente, executarScript } from './suporte/suporteScripts';
 
@@ -43,9 +43,7 @@ executarScript(async () => {
   const opcoes = {
     caminhoBanco: ambiente.caminhoBancoSqlite,
     diretorioAnexos: ambiente.diretorioAnexos,
-    caminhoChaveLinkPadrao: resolverCaminhoChaveLinkPadrao(
-      ambiente.caminhoBancoSqlite,
-    ),
+    caminhoChaveLinks: resolverCaminhoChaveLinks(ambiente.caminhoBancoSqlite),
   };
   console.log('O reset apaga, sem backup:');
   for (const alvo of listarAlvosReset(opcoes)) {

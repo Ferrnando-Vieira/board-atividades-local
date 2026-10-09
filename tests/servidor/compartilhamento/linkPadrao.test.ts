@@ -6,13 +6,15 @@ import { fecharBanco, type BancoDados } from '@/servidor/banco/conexao';
 import { consultarQuadro } from '@/servidor/board/consultaQuadro';
 import { validarTokenCompartilhamento } from '@/servidor/compartilhamento/acessoCompartilhamento';
 import {
+  lerChaveLinks,
+  obterOuCriarChaveLinks,
+  resolverCaminhoChaveLinks,
+} from '@/servidor/compartilhamento/chaveLinks';
+import {
   consultarLinkPadrao,
   garantirLinkPadrao,
-  lerChaveLinkPadrao,
   NOME_LINK_PADRAO,
-  obterOuCriarChaveLinkPadrao,
   renovarLinkPadrao,
-  resolverCaminhoChaveLinkPadrao,
 } from '@/servidor/compartilhamento/linkPadrao';
 import {
   listarLinksCompartilhamento,
@@ -192,9 +194,7 @@ describe('link padrão de visualização', () => {
 
     beforeEach(() => {
       diretorio = fs.mkdtempSync(path.join(os.tmpdir(), 'board-chave-'));
-      caminho = resolverCaminhoChaveLinkPadrao(
-        path.join(diretorio, 'board.sqlite'),
-      );
+      caminho = resolverCaminhoChaveLinks(path.join(diretorio, 'board.sqlite'));
     });
 
     afterEach(() => {
@@ -206,21 +206,21 @@ describe('link padrão de visualização', () => {
     });
 
     it('deve criar a chave uma vez e devolver sempre a mesma', () => {
-      expect(lerChaveLinkPadrao(caminho)).toBeNull();
+      expect(lerChaveLinks(caminho)).toBeNull();
 
-      const criada = obterOuCriarChaveLinkPadrao(caminho);
+      const criada = obterOuCriarChaveLinks(caminho);
 
-      expect(obterOuCriarChaveLinkPadrao(caminho).equals(criada)).toBe(true);
-      expect(lerChaveLinkPadrao(caminho)?.equals(criada)).toBe(true);
+      expect(obterOuCriarChaveLinks(caminho).equals(criada)).toBe(true);
+      expect(lerChaveLinks(caminho)?.equals(criada)).toBe(true);
     });
 
     it('deve substituir um arquivo de chave corrompido', () => {
       fs.writeFileSync(caminho, 'conteudo-invalido');
 
-      const chave = obterOuCriarChaveLinkPadrao(caminho);
+      const chave = obterOuCriarChaveLinks(caminho);
 
       expect(chave).toHaveLength(32);
-      expect(lerChaveLinkPadrao(caminho)?.equals(chave)).toBe(true);
+      expect(lerChaveLinks(caminho)?.equals(chave)).toBe(true);
     });
   });
 });

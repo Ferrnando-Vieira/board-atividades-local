@@ -1,6 +1,8 @@
 import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { randomBytes } from 'node:crypto';
 import { ehChaveAnimal, type ChaveAnimal } from '@/config/animais';
 import type { ModalidadeCompartilhamento } from '@/config/constantes';
+import { TOKEN_ALEATORIO_BYTES } from '@/config/constantesSeguranca';
 import type { BancoDados, ExecutorBanco } from '@/servidor/banco/conexao';
 import {
   escopoLinkSolicitantes,
@@ -11,17 +13,21 @@ import {
   tags,
 } from '@/servidor/banco/esquema';
 import { exigirBoardPadrao } from '@/servidor/board/boardRepositorio';
+import {
+  derivarTokenLink,
+  tokenDerivadoConfere,
+} from '@/servidor/compartilhamento/chaveLinks';
 import type {
   DadosAnimalLink,
+  DadosEdicaoLink,
   DadosNovoLink,
-  DadosRevogacaoLink,
+  DadosReferenciaLink,
 } from '@/servidor/compartilhamento/esquemasCompartilhamento';
 import { mensagensCompartilhamento as mensagens } from '@/servidor/compartilhamento/mensagensCompartilhamento';
 import {
   calcularHashToken,
-  determinarSituacaoCredencial,
-  gerarTokenSeguro,
-  type SituacaoCredencial,
+  determinarSituacaoValidade,
+  type SituacaoValidade,
 } from '@/servidor/seguranca/tokens';
 import { calcularExpiracaoEmDias } from '@/util/DataUtils';
 import { ErroApp, STATUS_ERRO } from '@/util/ErroApp';
@@ -32,11 +38,17 @@ const TRANSACAO_ESCRITA = { behavior: 'immediate' } as const;
 export const CODIGO_LINK_INEXISTENTE = 'link-inexistente';
 export const CODIGO_ESCOPO_INEXISTENTE = 'escopo-inexistente';
 
-const ORDEM_SITUACOES: Record<SituacaoCredencial, number> = {
+const ORDEM_SITUACOES: Record<SituacaoValidade, number> = {
   ativo: 0,
   expirado: 1,
-  revogado: 2,
 };
+
+function erroLinkInexistente(): ErroApp {
+  return new ErroApp(mensagens.linkInexistente, {
+    status: STATUS_ERRO.NAO_ENCONTRADO,
+    codigo: CODIGO_LINK_INEXISTENTE,
+  });
+}
 
 export type LinkCriado = {
   linkId: number;
@@ -60,9 +72,8 @@ export type LinkCompartilhamentoResumo = {
   solicitantes: ItemEscopo[];
   criadoEm: string;
   expiraEm: string | null;
-  revogadoEm: string | null;
   ultimoAcessoEm: string | null;
-  situacao: SituacaoCredencial;
+  situacao: SituacaoValidade;
 };
 
 type TabelaEscopo = typeof tags | typeof solicitantes;
@@ -95,30 +106,93 @@ function exigirItensDoBoard(
   }
 }
 
-// O token só existe na resposta desta função: o banco guarda o SHA-256, e o
-// endereço completo não pode ser exibido de novo depois.
+type EscopoLink = Pick<DadosNovoLink, 'tagIds' | 'solicitanteIds'>;
+
+function exigirEscopoDoBoard(
+  executor: ExecutorBanco,
+  boardId: number,
+  escopo: EscopoLink,
+): void {
+  exigirItensDoBoard(
+    executor,
+    tags,
+    boardId,
+    escopo.tagIds,
+    mensagens.tagInexistente,
+  );
+  exigirItensDoBoard(
+    executor,
+    solicitantes,
+    boardId,
+    escopo.solicitanteIds,
+    mensagens.solicitanteInexistente,
+  );
+}
+
+function gravarEscopo(
+  executor: ExecutorBanco,
+  linkId: number,
+  escopo: EscopoLink,
+): void {
+  if (escopo.tagIds.length > 0) {
+    executor
+      .insert(escopoLinkTags)
+      .values(escopo.tagIds.map((tagId) => ({ linkId, tagId })))
+      .run();
+  }
+  if (escopo.solicitanteIds.length > 0) {
+    executor
+      .insert(escopoLinkSolicitantes)
+      .values(
+        escopo.solicitanteIds.map((solicitanteId) => ({
+          linkId,
+          solicitanteId,
+        })),
+      )
+      .run();
+  }
+}
+
+function apagarEscopo(executor: ExecutorBanco, linkId: number): void {
+  executor
+    .delete(escopoLinkTags)
+    .where(eq(escopoLinkTags.linkId, linkId))
+    .run();
+  executor
+    .delete(escopoLinkSolicitantes)
+    .where(eq(escopoLinkSolicitantes.linkId, linkId))
+    .run();
+  executor
+    .delete(escopoLinkStatus)
+    .where(eq(escopoLinkStatus.linkId, linkId))
+    .run();
+}
+
+function gravarTokenDerivado(
+  executor: ExecutorBanco,
+  linkId: number,
+  chave: Buffer,
+): string {
+  const token = derivarTokenLink(chave, { id: linkId, padrao: false });
+  executor
+    .update(linksCompartilhamento)
+    .set({ hashToken: calcularHashToken(token) })
+    .where(eq(linksCompartilhamento.id, linkId))
+    .run();
+  return token;
+}
+
+// O token é derivado da chave dos links e do id, que só existe depois da
+// inserção: o hash provisório (de bytes aleatórios) não sai da transação.
 export function criarLinkCompartilhamento(
   banco: BancoDados,
   dados: DadosNovoLink,
+  chave: Buffer,
   agora: Date = new Date(),
 ): LinkCriado {
   return banco.transaction((transacao) => {
     const board = exigirBoardPadrao(transacao);
-    exigirItensDoBoard(
-      transacao,
-      tags,
-      board.id,
-      dados.tagIds,
-      mensagens.tagInexistente,
-    );
-    exigirItensDoBoard(
-      transacao,
-      solicitantes,
-      board.id,
-      dados.solicitanteIds,
-      mensagens.solicitanteInexistente,
-    );
-    const token = gerarTokenSeguro();
+    exigirEscopoDoBoard(transacao, board.id, dados);
     const expiraEm = calcularExpiracaoEmDias(agora, dados.validadeDias);
     const link = transacao
       .insert(linksCompartilhamento)
@@ -126,7 +200,9 @@ export function criarLinkCompartilhamento(
         boardId: board.id,
         nome: dados.nome,
         modalidade: dados.modalidade,
-        hashToken: calcularHashToken(token),
+        hashToken: calcularHashToken(
+          randomBytes(TOKEN_ALEATORIO_BYTES).toString('base64url'),
+        ),
         incluirArquivadas: dados.incluirArquivadas,
         expiraEm,
         animal: dados.animal,
@@ -134,25 +210,115 @@ export function criarLinkCompartilhamento(
       })
       .returning({ id: linksCompartilhamento.id })
       .get();
-    if (dados.tagIds.length > 0) {
-      transacao
-        .insert(escopoLinkTags)
-        .values(dados.tagIds.map((tagId) => ({ linkId: link.id, tagId })))
-        .run();
-    }
-    if (dados.solicitanteIds.length > 0) {
-      transacao
-        .insert(escopoLinkSolicitantes)
-        .values(
-          dados.solicitanteIds.map((solicitanteId) => ({
-            linkId: link.id,
-            solicitanteId,
-          })),
-        )
-        .run();
-    }
+    gravarEscopo(transacao, link.id, dados);
+    const token = gravarTokenDerivado(transacao, link.id, chave);
     return { linkId: link.id, token, expiraEm };
   }, TRANSACAO_ESCRITA);
+}
+
+function buscarLinkNomeadoAtivo(
+  executor: ExecutorBanco,
+  boardId: number,
+  linkId: number,
+) {
+  const link = executor
+    .select({
+      id: linksCompartilhamento.id,
+      expiraEm: linksCompartilhamento.expiraEm,
+      hashToken: linksCompartilhamento.hashToken,
+    })
+    .from(linksCompartilhamento)
+    .where(
+      and(
+        eq(linksCompartilhamento.id, linkId),
+        eq(linksCompartilhamento.boardId, boardId),
+        eq(linksCompartilhamento.padrao, false),
+        isNull(linksCompartilhamento.revogadoEm),
+      ),
+    )
+    .get();
+  if (!link) {
+    throw erroLinkInexistente();
+  }
+  return link;
+}
+
+// O endereço continua o mesmo: quem já tem o link passa a ver o novo escopo
+// na próxima requisição. Validade omitida mantém a atual.
+export function editarLinkCompartilhamento(
+  banco: BancoDados,
+  dados: DadosEdicaoLink,
+  agora: Date = new Date(),
+): void {
+  banco.transaction((transacao) => {
+    const board = exigirBoardPadrao(transacao);
+    const atual = buscarLinkNomeadoAtivo(transacao, board.id, dados.linkId);
+    exigirEscopoDoBoard(transacao, board.id, dados);
+    transacao
+      .update(linksCompartilhamento)
+      .set({
+        nome: dados.nome,
+        modalidade: dados.modalidade,
+        incluirArquivadas: dados.incluirArquivadas,
+        expiraEm:
+          dados.validadeDias === undefined
+            ? atual.expiraEm
+            : calcularExpiracaoEmDias(agora, dados.validadeDias),
+        atualizadoEm: agora.toISOString(),
+        versao: sql`${linksCompartilhamento.versao} + 1`,
+      })
+      .where(eq(linksCompartilhamento.id, atual.id))
+      .run();
+    apagarEscopo(transacao, atual.id);
+    gravarEscopo(transacao, atual.id, dados);
+  }, TRANSACAO_ESCRITA);
+}
+
+// Para links gravados antes da derivação (ou depois de trocada a chave): o
+// endereço passa a ser o derivado, e o antigo deixa de funcionar.
+export function tornarEnderecoCopiavel(
+  banco: BancoDados,
+  dados: DadosReferenciaLink,
+  chave: Buffer,
+): string {
+  return banco.transaction((transacao) => {
+    const board = exigirBoardPadrao(transacao);
+    const link = buscarLinkNomeadoAtivo(transacao, board.id, dados.linkId);
+    return tokenDerivadoConfere(chave, { ...link, padrao: false })
+      ? derivarTokenLink(chave, { id: link.id, padrao: false })
+      : gravarTokenDerivado(transacao, link.id, chave);
+  }, TRANSACAO_ESCRITA);
+}
+
+// Só dos links nomeados ainda não revogados cujo hash confere com a chave
+// atual; os demais não têm endereço reconstruível.
+export function consultarTokensLinks(
+  executor: ExecutorBanco,
+  boardId: number,
+  chave: Buffer,
+): Map<number, string> {
+  const links = executor
+    .select({
+      id: linksCompartilhamento.id,
+      hashToken: linksCompartilhamento.hashToken,
+    })
+    .from(linksCompartilhamento)
+    .where(
+      and(
+        eq(linksCompartilhamento.boardId, boardId),
+        eq(linksCompartilhamento.padrao, false),
+        isNull(linksCompartilhamento.revogadoEm),
+      ),
+    )
+    .all();
+  return new Map(
+    links.flatMap((link) => {
+      const derivavel = { ...link, padrao: false };
+      return tokenDerivadoConfere(chave, derivavel)
+        ? [[link.id, derivarTokenLink(chave, derivavel)] as const]
+        : [];
+    }),
+  );
 }
 
 function agruparPorLink(
@@ -204,7 +370,8 @@ function listarSolicitantesDosLinks(
   );
 }
 
-// O hash nunca sai daqui: a listagem seleciona só as colunas exibidas.
+// Revogados ficam só no banco: a listagem traz os ativos e os expirados, e o
+// hash nunca sai daqui.
 export function listarLinksCompartilhamento(
   executor: ExecutorBanco,
   boardId: number,
@@ -220,11 +387,15 @@ export function listarLinksCompartilhamento(
       animal: linksCompartilhamento.animal,
       criadoEm: linksCompartilhamento.criadoEm,
       expiraEm: linksCompartilhamento.expiraEm,
-      revogadoEm: linksCompartilhamento.revogadoEm,
       ultimoAcessoEm: linksCompartilhamento.ultimoAcessoEm,
     })
     .from(linksCompartilhamento)
-    .where(eq(linksCompartilhamento.boardId, boardId))
+    .where(
+      and(
+        eq(linksCompartilhamento.boardId, boardId),
+        isNull(linksCompartilhamento.revogadoEm),
+      ),
+    )
     .orderBy(
       desc(linksCompartilhamento.criadoEm),
       desc(linksCompartilhamento.id),
@@ -242,11 +413,7 @@ export function listarLinksCompartilhamento(
       animal: ehChaveAnimal(link.animal) ? link.animal : null,
       tags: tagsPorLink.get(link.id) ?? [],
       solicitantes: solicitantesPorLink.get(link.id) ?? [],
-      situacao: determinarSituacaoCredencial(
-        link.revogadoEm,
-        link.expiraEm,
-        agora,
-      ),
+      situacao: determinarSituacaoValidade(link.expiraEm, agora),
     }))
     .sort(
       (primeiro, segundo) =>
@@ -281,10 +448,7 @@ export function definirAnimalLink(
       .returning({ id: linksCompartilhamento.id })
       .get();
     if (!atualizado) {
-      throw new ErroApp(mensagens.linkInexistente, {
-        status: STATUS_ERRO.NAO_ENCONTRADO,
-        codigo: CODIGO_LINK_INEXISTENTE,
-      });
+      throw erroLinkInexistente();
     }
   }, TRANSACAO_ESCRITA);
 }
@@ -293,7 +457,7 @@ export function definirAnimalLink(
 // linhas bloquearia (RESTRICT) a exclusão das tags e status que ele citava.
 export function revogarLinkCompartilhamento(
   banco: BancoDados,
-  dados: DadosRevogacaoLink,
+  dados: DadosReferenciaLink,
   agora: Date = new Date(),
 ): void {
   banco.transaction((transacao) => {
@@ -312,10 +476,7 @@ export function revogarLinkCompartilhamento(
       )
       .get();
     if (!link) {
-      throw new ErroApp(mensagens.linkInexistente, {
-        status: STATUS_ERRO.NAO_ENCONTRADO,
-        codigo: CODIGO_LINK_INEXISTENTE,
-      });
+      throw erroLinkInexistente();
     }
     if (link.revogadoEm === null) {
       transacao
@@ -327,17 +488,6 @@ export function revogarLinkCompartilhamento(
         .where(eq(linksCompartilhamento.id, link.id))
         .run();
     }
-    transacao
-      .delete(escopoLinkTags)
-      .where(eq(escopoLinkTags.linkId, link.id))
-      .run();
-    transacao
-      .delete(escopoLinkSolicitantes)
-      .where(eq(escopoLinkSolicitantes.linkId, link.id))
-      .run();
-    transacao
-      .delete(escopoLinkStatus)
-      .where(eq(escopoLinkStatus.linkId, link.id))
-      .run();
+    apagarEscopo(transacao, link.id);
   }, TRANSACAO_ESCRITA);
 }
